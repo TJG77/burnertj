@@ -784,10 +784,11 @@ P_PCS = Qn · PCS        (base de facturación)</div>
     },
     {
       id: 'lamtec', name: 'LAMTEC BT3xx',
-      how: ['Aplica a BT320, BT330, BT331, BT340 y BT341 (software BT300 v3.3, UI300 v3.5).',
+      how: ['Aplica a BT320, BT330, BT331, BT335, BT340 y BT341. La lista oficial es del software BT300 v3.9 con UI300 v3.11 o v4.2.',
         'El display muestra el número de error y dos códigos auxiliares D1 y D2. Si vas a consultar con LAMTEC, anota los tres.',
-        'Los errores con número de 999 y los de configuración 107 tienen listas propias en el manual completo.'],
-      src: 'Suplemento de LAMTEC «Códigos de error BT300» (copia en ruso). Las descripciones son traducción mía y solo los errores 1 a 4 llevan lista de comprobaciones. Confirma en el manual oficial ante errores críticos.',
+        'Hay números que solo están en versiones antiguas del software y otros que en la v3.9 son «error interno». Te lo marco en cada código afectado.',
+        'Los errores 107, 600, 999 y los del regulador de CO/O₂ tienen listas propias en el suplemento oficial.'],
+      src: 'LAMTEC, «BurnerTronic BT300: códigos de error, software v3.9» (DLT1205-22-aEN-016). Descripciones traducidas por mí; los errores 1 a 4 y los marcados llevan la lista oficial de comprobaciones.',
       codes: [
         E('0', 'Error desconocido (interno)', 'interno', 'Resetea el error.', 'Si no se borra, envía el código de error y los códigos D1 y D2 a support@lamtec.de y cambia el automatismo.'),
         E('1', 'Ausencia o pérdida de llama durante el encendido', 'llama', 'Curva en la posición de encendido.', 'Transformador de encendido y piloto.', 'Sensor de llama y su posición.', 'Estabilidad y calidad de la llama.', 'Apertura de las válvulas de combustible.', 'Suministro y presión estable del combustible.', 'Puesta a tierra del sensor de llama.', 'Rotura o cortocircuito de los cables del sensor.', 'Conexión eléctrica y parámetro P800.'),
@@ -816,13 +817,13 @@ P_PCS = Qn · PCS        (base de facturación)</div>
         E('241', 'El servomotor no se mueve o no hay señal de realimentación de posición', 'actuador'),
         E('251', 'El servomotor no llega a la posición indicada', 'actuador'),
         E('281', 'Señal de realimentación de posición incorrecta en al menos un canal', 'actuador'),
-        E('321', 'Falta la realimentación de posición del servomotor', 'actuador'),
+        E('321', 'Falta la realimentación de posición del servomotor', 'actuador', 'No figura en la lista oficial v3.9. Es de una versión anterior del software.'),
         E('351', 'Cambio de combustible no permitido con el quemador en marcha', 'parámetros'),
         E('360', 'Parada por el corrector de O₂ por falta de oxígeno', 'combustión'),
         E('362', 'Vencido el intervalo de mantenimiento del quemador', 'info'),
         E('363', 'Valor de O₂ por debajo del límite inferior permitido', 'combustión'),
-        E('372', 'Gran diferencia de potencia entre procesador principal y de control', 'interno'),
-        E('381', 'Gran diferencia de corrección entre procesador principal y de control', 'interno'),
+        E('372', 'Gran diferencia de potencia entre procesador principal y de control', 'interno', 'No figura en la lista oficial v3.9. Es de una versión anterior del software.'),
+        E('381', 'Gran diferencia de corrección entre procesador principal y de control', 'interno', 'No figura en la lista oficial v3.9. Es de una versión anterior del software.'),
         E('391', 'La curva no corresponde al combustible elegido', 'parámetros'),
         E('393', 'Parada forzada del quemador', 'info'),
         E('394', 'Pérdida de la señal de arranque del quemador desde el BT300', 'comunicación'),
@@ -831,7 +832,7 @@ P_PCS = Qn · PCS        (base de facturación)</div>
         E('601', 'Control de estanqueidad: presión superior a la normal', 'válvulas'),
         E('602', 'Control de estanqueidad: presión inferior a la normal', 'válvulas'),
         E('603', 'Purgar a mano el aire de la tubería de gas', 'gas'),
-        E('606', 'Estado incorrecto de la señal CPI/POC', 'válvulas'),
+        E('606', 'Estado incorrecto de la señal CPI/POC', 'válvulas', 'Revisa los contactos CPI/POC de las válvulas principales.', 'Revisa el funcionamiento de las válvulas principales.'),
         E('609', 'Cadena de seguridad del gas abierta', 'seguridad'),
         E('613', 'Sin señal de presión de aire', 'aire'),
         E('617', 'Pérdida de llama del piloto permanente en funcionamiento', 'llama'),
@@ -843,8 +844,8 @@ P_PCS = Qn · PCS        (base de facturación)</div>
         E('717', 'Combinación de señales incorrecta en el encendido', 'interno'),
         E('730', 'Modo de ajuste del piloto activo', 'info'),
         E('732', 'Combinación de señales incorrecta en funcionamiento', 'interno'),
-        E('740', 'Control de estanqueidad: presión superior a la normal', 'válvulas'),
-        E('742', 'Control de estanqueidad: presión inferior a la normal', 'válvulas'),
+        E('740', 'Prueba de estanqueidad: la válvula principal de gas 1 pierde', 'válvulas', 'Comprueba el funcionamiento del presostato de gas.', '¿Se abre la válvula principal 2 durante la prueba? Si no, revisa la válvula y cámbiala si hace falta, y revisa el cableado.', 'Mira la presión de salida de las válvulas principales al ventear la línea de prueba. Si supera la presión ajustada en el presostato, reajusta el presostato y recalcula la fuga (respeta las normas locales), o reduce la apertura de la compuerta de aire al ventear.', 'Si persiste, cambia el equipo.'),
+        E('742', 'Prueba de estanqueidad: la válvula principal de gas 2 pierde', 'válvulas', 'En software BT300 superior a 3.3: revisa la presión de entrada de gas. ¿Es inferior a la ajustada en el presostato?', 'Comprueba el funcionamiento del presostato de gas.', '¿Se abre la válvula 1 al activarla? Si sí, la válvula de gas 2 pierde: cámbiala.'),
         E('743', 'Control de llama: hay llama tras apagar el quemador', 'llama'),
         E('745', 'Superado el tiempo de control de la ejecución del programa', 'interno'),
         E('759', 'Salida automática del modo de ajuste tras 24 h', 'info'),
@@ -856,17 +857,45 @@ P_PCS = Qn · PCS        (base de facturación)</div>
         E('806', 'Valor de consigna del canal poco fiable', 'actuador'),
         E('807', 'Agotado el tiempo de espera de respuesta del LSB', 'comunicación'),
         E('889', 'Reset de error demasiado frecuente', 'info'),
-        E('923', 'Autotest fallido: relé de la válvula de gas 1', 'interno'),
-        E('924', 'Autotest fallido: relé de la válvula de gas 2', 'interno'),
-        E('925', 'Autotest fallido: relé del transformador de encendido', 'interno'),
-        E('928', 'Autotest fallido: relé de la bomba de combustible líquido', 'interno'),
+        E('923', 'Autotest fallido: relé de la válvula de gas 1', 'interno', 'En la lista oficial v3.9 este número es «error interno»: resetea y, si se repite, manda el código y D1 y D2 a LAMTEC y cambia el equipo. El significado de arriba es de una versión anterior.'),
+        E('924', 'Autotest fallido: relé de la válvula de gas 2', 'interno', 'En la lista oficial v3.9 este número es «error interno»: resetea y, si se repite, manda el código y D1 y D2 a LAMTEC y cambia el equipo. El significado de arriba es de una versión anterior.'),
+        E('925', 'Autotest fallido: relé del transformador de encendido', 'interno', 'En la lista oficial v3.9 este número es «error interno»: resetea y, si se repite, manda el código y D1 y D2 a LAMTEC y cambia el equipo. El significado de arriba es de una versión anterior.'),
+        E('928', 'Autotest fallido: relé de la bomba de combustible líquido', 'interno', 'En la lista oficial v3.9 este número es «error interno»: resetea y, si se repite, manda el código y D1 y D2 a LAMTEC y cambia el equipo. El significado de arriba es de una versión anterior.'),
         E('929', 'Autotest fallido: relé del motor del ventilador', 'interno'),
         E('985', 'Error de diagnóstico del módulo VSM100', 'variador'),
         E('986', 'La comprobación dinámica detectó una realimentación incorrecta', 'interno'),
         E('988', 'Error de relé del módulo DFM300', 'interno'),
         E('989', 'Error de verosimilitud de la realimentación', 'interno'),
         E('996', 'Automatismo de combustión bloqueado', 'info'),
-        E('731, 734, 741, 746, 747, 763, 801, 804, 921, 922, 987', 'Error interno', 'interno', 'Resetea. Si se repite, anota el código con D1 y D2 y consulta con LAMTEC.')
+        E('731, 734, 741, 746, 747, 763, 801, 804, 921, 922, 987', 'Error interno', 'interno', 'Resetea. Si se repite, anota el código con D1 y D2 y consulta con LAMTEC.', 'En la v3.9 también son error interno: 719, 721 a 729, 739, 921 a 929 y 999.'),
+        E('607', 'Error de reconocimiento de la posición de encendido', 'actuador', 'No figura en la lista oficial v3.9. Es de una versión anterior del software.'),
+        E('608', 'Error en la cadena de seguridad (interbloqueo) del calentador', 'seguridad', 'Revisa la cadena de seguridad y los limitadores.'),
+        E('610', 'Error en la cadena de seguridad del gasóleo', 'seguridad'),
+        E('611', 'Presión de gas demasiado baja', 'gas', 'Revisa la presión de entrada y el presostato de gas.', 'Revisa la presión de gas y el presostato de gas.', 'Comprueba que llega gas.'),
+        E('624 · 724', 'Presión de gasóleo demasiado baja', 'combustible', 'Revisa el suministro, la bomba y el presostato de gasóleo.', 'Según la lista v3.9 (código 624): revisa el filtro y el regulador de gasóleo.'),
+        E('105', 'Datos de curva no válidos o inexistentes', 'curva', 'Hay que programar la curva. La información adicional indica la curva y el número de combustible.'),
+        E('151', 'La válvula de recirculación está desactivada', 'válvulas', 'La información adicional indica el canal.'),
+        E('231', 'El control de la relación combustible/aire está bloqueado', 'actuador', 'La información adicional indica el canal.'),
+        E('261', 'El servomotor va a una posición no válida (gran diferencia con la posición de destino)', 'actuador', 'La información adicional indica el canal.'),
+        E('271', 'La posición del servomotor cambia demasiado rápido, deslizamiento', 'actuador', 'La información adicional indica el canal.'),
+        E('320', 'Cable roto en la entrada del encendido', 'encendido', 'No figura en la lista oficial v3.9. Es de una versión anterior del software.'),
+        E('352 · 353', 'Combinación no válida de las señales de combustible (352: ninguna señal; 353: demasiadas señales)', 'combustible', 'Revisa la selección de gas / gasóleo en los bornes.', 'No figura en la lista oficial v3.9. Es de una versión anterior del software.'),
+        E('371', 'La salida del encendido interno es defectuosa', 'interno', 'No figura en la lista oficial v3.9. Es de una versión anterior del software.'),
+        E('719', 'Las válvulas de combustible se quedan abiertas demasiado tiempo', 'válvulas', 'En la lista oficial v3.9 este número es «error interno»: resetea y, si se repite, manda el código y D1 y D2 a LAMTEC y cambia el equipo. El significado de arriba es de una versión anterior.'),
+        E('720', 'El transformador de encendido se queda activo demasiado tiempo', 'encendido'),
+        E('721', 'La válvula de encendido se queda abierta demasiado tiempo', 'válvulas', 'En la lista oficial v3.9 este número es «error interno»: resetea y, si se repite, manda el código y D1 y D2 a LAMTEC y cambia el equipo. El significado de arriba es de una versión anterior.'),
+        E('722', 'Las válvulas de combustible se abren en modo de mantenimiento', 'válvulas', 'En la lista oficial v3.9 este número es «error interno»: resetea y, si se repite, manda el código y D1 y D2 a LAMTEC y cambia el equipo. El significado de arriba es de una versión anterior.'),
+        E('723', 'El proceso de encendido tarda demasiado', 'encendido', 'En la lista oficial v3.9 este número es «error interno»: resetea y, si se repite, manda el código y D1 y D2 a LAMTEC y cambia el equipo. El significado de arriba es de una versión anterior.'),
+        E('725', 'Las válvulas de gasóleo siguen abiertas al seleccionar gas', 'válvulas', 'En la lista oficial v3.9 este número es «error interno»: resetea y, si se repite, manda el código y D1 y D2 a LAMTEC y cambia el equipo. El significado de arriba es de una versión anterior.'),
+        E('727', 'La válvula principal de gas 1 se abre sin orden', 'válvulas', 'En la lista oficial v3.9 este número es «error interno»: resetea y, si se repite, manda el código y D1 y D2 a LAMTEC y cambia el equipo. El significado de arriba es de una versión anterior.'),
+        E('728', 'Las tres válvulas de gas se quedan abiertas demasiado tiempo', 'válvulas', 'En la lista oficial v3.9 este número es «error interno»: resetea y, si se repite, manda el código y D1 y D2 a LAMTEC y cambia el equipo. El significado de arriba es de una versión anterior.'),
+        E('729', 'El encendido dura demasiado (sin quemador piloto)', 'encendido', 'En la lista oficial v3.9 este número es «error interno»: resetea y, si se repite, manda el código y D1 y D2 a LAMTEC y cambia el equipo. El significado de arriba es de una versión anterior.'),
+        E('739', 'Prueba de estanqueidad: la válvula principal de gas 1 se queda abierta demasiado tiempo', 'válvulas', 'En la lista oficial v3.9 este número es «error interno»: resetea y, si se repite, manda el código y D1 y D2 a LAMTEC y cambia el equipo. El significado de arriba es de una versión anterior.'),
+        E('751', 'La tarjeta de bus se queda en espera', 'comunicación', 'No figura en la lista oficial v3.9. Es de una versión anterior del software.'),
+        E('760', 'No se puede cambiar de combustible en modo de programación', 'parámetros', 'No figura en la lista oficial v3.9. Es de una versión anterior del software.'),
+        E('888', 'El bloqueo de errores está activo', 'seguridad', 'La información adicional es un número de referencia.', 'No figura en la lista oficial v3.9. Es de una versión anterior del software.'),
+        E('990', 'Fallo de corriente', 'alimentación'),
+        E('999', 'Error interno', 'interno', 'Mira el capítulo «Asignación del error interno 999» del manual, según la información adicional.')
       ]
     },
     {
@@ -1068,12 +1097,23 @@ P_PCS = Qn · PCS        (base de facturación)</div>
       src: 'Ficha técnica Siemens CC1N7101.'
     },
     {
-      name: 'LAMTEC BT3xx', status: 'pend', statusTxt: 'Pendiente',
-      pw: [],
-      pwNote: 'No he encontrado el procedimiento ni las claves en ningún documento accesible: el capítulo «Enter password» del manual del BT300 está en el PDF completo que no he podido leer. Pásamelo o dime cómo entras tú y lo añado.',
-      steps: [],
-      notes: ['En el manual de LAMTEC hay una sección «Settings menu path» con el camino por el UI300 y un capítulo 5.6.1 «Enter password».'],
-      src: 'Índice del manual LAMTEC BT300 Quick Reference.'
+      name: 'LAMTEC BT3xx', status: 'part', statusTxt: 'Nivel 1 verificado, falta la clave del nivel 2',
+      pw: [
+        { n: 'Nivel 1 (BT 320 / 330 / 340)', v: '', from: 'guía rápida Baltur BT 320/330/340' }
+      ],
+      pwNote: 'La clave de fábrica del nivel 1 está en el manual de LAMTEC, que pide cambiarla. Si no entra, el fabricante del quemador la ha cambiado. El nivel 2 no tiene clave universal: se fija por equipo con el «código de cliente» desde el software LSB Remote, así que solo la conoce quien configuró el equipo. Dime la tuya si la tienes y la añado.',
+      steps: [
+        'En la pantalla de inicio, pulsa ENVÍO para desbloquear el controlador si está bloqueado.',
+        'Con la flecha derecha ve al icono de Configuración (llave inglesa y martillo) y pulsa ENVÍO.',
+        'Pulsa ENVÍO otra vez. Sale la pantalla de la clave.',
+        'Deja la clave 0000 y confirma con ENVÍO. Aparece una página nueva con el nivel 1 desbloqueado.',
+        'Para cambiar una cifra de la clave: flechas para elegir el campo, flechas arriba o abajo para cambiar el número y ENVÍO para confirmar.',
+        'En el menú de Configuración tienes: clave, ajustes del programa, controlador de combustión, lectura de los actuadores, ajustes de la curva, borrar las curvas y ajustes de pantalla.'
+      ],
+      notes: ['No mantengas pulsada la flecha más de 2 s en los ajustes de curva: provoca un bloqueo.',
+        'Con el UI300 solo se pueden cambiar parámetros hasta el nivel de acceso 2. Los valores fuera de norma (EN 676, EN 267…) se programan en el nivel 2: comprueba que siguen cumpliéndola.',
+        'Con el UI300 conectado, un valor nuevo se acepta con ENVÍO dentro de una cuenta atrás de 8 s, y solo si los valores del UI300 y del BT300 coinciden.'],
+      src: 'Guía rápida BT 320 / 330 / 340 (0006081511_201311) págs. 2 a 3 y cap. 5.6; manual LAMTEC BT300 DLT1201-26-EN-027, cap. 6.1.7 y 6.2.'
     },
     {
       name: 'Weishaupt W-FM 25 (tapa gris)', status: 'part', statusTxt: 'Pasos verificados, sin clave en el manual',
@@ -1226,18 +1266,55 @@ P_PCS = Qn · PCS        (base de facturación)</div>
       src: 'Manual base Siemens LMV37.4 CC1P7546en, capítulo 26.11.'
     },
     {
-      name: 'LAMTEC BT3xx', status: 'pend', statusTxt: 'Pendiente',
-      need: '',
+      name: 'LAMTEC BT3xx', status: 'part', statusTxt: 'Pasos de la guía rápida, sin iconos',
+      need: 'Hace falta el nivel 1 (clave en la pestaña Acceso). Algunas funciones piden el nivel 2.',
       blocks: [
         {
-          h: 'Lo que sé', kind: 'ul', items: [
-            'El BT340 guarda 2 juegos de curvas (fuel y gas, conmutables). El BT320 y el BT330 guardan 1.',
-            'Las curvas se configuran desde el menú del UI300.',
-            'No tengo los pasos del menú ni las claves. Pásame el manual del BT300 o dime cómo entras y lo completo.'
+          h: 'Ajustar el punto de encendido (quemador en espera)', kind: 'ol', items: [
+            'En la pantalla de inicio mantén el termostato apagado. Desbloquea con ENVÍO.',
+            'Entra en Configuración con la clave (mira Acceso) y abre «Ajustes de la curva».',
+            'Pulsa ENVÍO para modificar las posiciones. Con arriba o abajo cambias la apertura del gas; con la flecha derecha pasas al servomotor del aire y repites.',
+            'Pulsa ENVÍO para memorizar.',
+            'Cierra el termostato: prebarrido, los servomotores van al punto de encendido y salta el transformador.'
+          ]
+        },
+        {
+          h: 'Ajustar el resto de puntos con el quemador encendido', kind: 'ol', items: [
+            'Mide la combustión con el analizador.',
+            'Pulsa ENVÍO para modificar, cambia gas y aire como antes y vuelve a pulsar ENVÍO para memorizar.',
+            'Sal de la posición de encendido con la flecha arriba y recorre los puntos de carga.',
+            'Ajusta la posición máxima (999) según la potencia máxima que necesite la caldera. Si hace falta, corrige la presión de gas a la salida del regulador. Vuelve a medir en todos los puntos.',
+            'Pulsa EXIT para memorizar, EXIT otra vez para salir del menú principal y una tercera para salir de la configuración. El quemador pasa a automático.'
+          ]
+        },
+        {
+          h: 'Con variador de frecuencia (inverter)', kind: 'ol', items: [
+            'Los puntos de la curva solo se cambian con el quemador encendido.',
+            'Si tienes que rehacer la curva: Configuración > Borrar las curvas y confirma con ENVÍO.',
+            'Cierra el termostato. Tras el prebarrido, el quemador va al punto de encendido, los servomotores de aire y gas se ponen en 0° y el variador en 30 Hz.',
+            'Pulsa ENVÍO y fija el punto de encendido con las flechas. Los valores que salen son los aconsejados.',
+            'Con el quemador encendido, comprueba la combustión, corrige con las flechas y memoriza con ENVÍO.',
+            'Ve a la carga 200 (mínimo del quemador), ajusta y memoriza. Después ve a la carga 999 (máximo), ajusta y memoriza.',
+            'Comprueba la combustión en 800, 700, 600, 500, 400, 300 y 250. Al terminar pulsa EXIT tres veces.'
+          ]
+        },
+        {
+          h: 'Datos de la curva', kind: 'ul', items: [
+            'Puntos de carga disponibles: encendido, 200, 250, 300, 400, 500, 600, 700, 800, 900 y 999.',
+            'En gasóleo de varias etapas salen además los puntos de conexión y desconexión entre etapas: 1, 1→2, 1←2, 2, 2→3, 2←3 y 3.',
+            'El BT320 y el BT330 guardan 1 juego de curva (gasóleo o gas). El BT340 guarda 2 juegos intercambiables y necesita un DFM300 o un LCM100.',
+            'Si en un quemador mixto ajustas el gasóleo, hazlo igual que en la versión de gas.'
+          ]
+        },
+        {
+          h: 'Precauciones', kind: 'ul', items: [
+            'No mantengas una flecha pulsada más de 2 s en los ajustes de curva: da un bloqueo.',
+            'Si cambias la curva durante la programación, aparece el aviso 391.',
+            'Los pasos vienen de una guía rápida con iconos. Si ves que el menú de tu BT es distinto, dime la versión.'
           ]
         }
       ],
-      src: 'Hoja técnica LAMTEC BT300 / BT320 / BT340.'
+      src: 'Guía rápida BT 320 / 330 / 340 (0006081511_201311), págs. 3 a 15 y cap. 5.6.'
     },
     {
       name: 'Weishaupt W-FM 25 (tapa gris)', status: 'part', statusTxt: 'Verificado en gasóleo WL10 / WL20',
