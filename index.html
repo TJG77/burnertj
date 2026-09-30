@@ -1,0 +1,1303 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b5f73"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
+<title>BURNERTJ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: app móvil de una columna; cabecera, selector de llamas, entradas, resultado en placa de latón, tabla de referencia, barra inferior de secciones. */
+:root {
+  --bg: #e9eef0;
+  --surface: #f7f9fa;
+  --surface-2: #dde5e8;
+  --ink: #14232b;
+  --ink-soft: #4a5e68;
+  --line: #c3d0d6;
+  --accent: #0a6a86;
+  --accent-ink: #ffffff;
+  --brass: #b9791a;
+  --brass-bg: #f3e6c8;
+  --ok: #1d7a3e;
+  --warn: #9a6400;
+  --bad: #b3261e;
+  --f-display: "Barlow Condensed", "Arial Narrow", Impact, sans-serif;
+  --f-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-data: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f181d; --surface: #17232a; --surface-2: #213139; --ink: #e6eef1; --ink-soft: #93a9b3;
+    --line: #2d434d; --accent: #4cc3e2; --accent-ink: #062631; --brass: #e2a648; --brass-bg: #2c2414;
+    --ok: #55c07c; --warn: #e0a340; --bad: #ff8a80; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f181d; --surface: #17232a; --surface-2: #213139; --ink: #e6eef1; --ink-soft: #93a9b3;
+  --line: #2d434d; --accent: #4cc3e2; --accent-ink: #062631; --brass: #e2a648; --brass-bg: #2c2414;
+  --ok: #55c07c; --warn: #e0a340; --bad: #ff8a80; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.45; padding-inline: 16px; padding-block: 0 96px; }
+.wrap { max-width: 560px; margin-inline: auto; display: flex; flex-direction: column; gap: 16px; }
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-block: 18px 2px; }
+.brand { font-family: var(--f-display); font-weight: 700; font-size: 34px; letter-spacing: .06em; line-height: 1; }
+.brand span { color: var(--accent); }
+.tag { font-family: var(--f-data); font-size: 12px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .08em; }
+h2 { font-family: var(--f-display); font-weight: 700; font-size: 26px; letter-spacing: .03em; margin: 0; text-transform: uppercase; }
+.lead { margin: 0; color: var(--ink-soft); font-size: 15px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.label { font-family: var(--f-data); font-size: 12px; text-transform: uppercase; letter-spacing: .09em; color: var(--ink-soft); }
+.seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface-2); border-radius: 8px; padding: 3px; gap: 3px; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label { text-align: center; padding: 11px 8px; border-radius: 6px; font-weight: 600; cursor: pointer; color: var(--ink-soft); min-height: 44px; display: flex; align-items: center; justify-content: center; }
+.seg input:checked + label { background: var(--accent); color: var(--accent-ink); }
+.seg input:focus-visible + label { outline: 3px solid var(--ink); outline-offset: 2px; }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.stepper { display: grid; grid-template-columns: 48px minmax(0, 1fr) 48px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--bg); }
+.stepper button { border: 0; background: var(--surface-2); color: var(--ink); font-size: 24px; font-family: var(--f-body); min-height: 52px; cursor: pointer; }
+.stepper button:active { background: var(--accent); color: var(--accent-ink); }
+.stepper input { border: 0; background: transparent; color: var(--ink); font-family: var(--f-data); font-weight: 600; font-size: 26px; text-align: center; width: 100%; min-width: 0; padding: 8px 4px; }
+.stepper input:focus { outline: none; }
+.stepper:focus-within { outline: 3px solid var(--accent); outline-offset: 1px; }
+.unit { font-family: var(--f-data); font-size: 13px; color: var(--ink-soft); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-family: var(--f-data); font-size: 14px; padding: 8px 12px; border-radius: 999px; cursor: pointer; min-height: 40px; }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+details.adv summary { cursor: pointer; font-weight: 600; color: var(--accent); min-height: 32px; display: flex; align-items: center; }
+details.adv .fields { margin-top: 12px; }
+.small-in { border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-family: var(--f-data); font-size: 16px; padding: 10px; border-radius: 8px; width: 100%; min-height: 44px; }
+.msg { border-left: 4px solid var(--warn); background: var(--brass-bg); padding: 10px 12px; border-radius: 4px; font-size: 14px; color: var(--ink); }
+.msg.bad { border-color: var(--bad); }
+/* resultado: placa de latón */
+.plate { background: var(--brass-bg); border: 2px solid var(--brass); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; position: relative; }
+.plate.alt { border-width: 1px; background: var(--surface); border-color: var(--line); }
+.plate .kicker { font-family: var(--f-data); font-size: 12px; text-transform: uppercase; letter-spacing: .09em; color: var(--brass); font-weight: 600; }
+.plate.alt .kicker { color: var(--ink-soft); }
+.big { font-family: var(--f-display); font-weight: 700; font-size: 68px; line-height: .9; letter-spacing: .01em; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.big small { font-size: 24px; color: var(--ink-soft); letter-spacing: .05em; }
+.big.sm { font-size: 44px; }
+.stage { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.stage > div { min-width: 0; }
+.kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px 16px; font-size: 14px; }
+.kv b { display: block; font-family: var(--f-data); font-size: 16px; font-weight: 600; }
+.kv span { color: var(--ink-soft); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+.dev { font-family: var(--f-data); font-size: 13px; font-weight: 600; padding: 3px 8px; border-radius: 4px; border: 1px solid currentColor; display: inline-block; }
+.dev.ok { color: var(--ok); } .dev.warn { color: var(--warn); } .dev.bad { color: var(--bad); }
+.split { border-top: 1px dashed var(--line); padding-top: 10px; display: grid; gap: 10px; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-family: var(--f-data); font-size: 14px; min-width: 380px; font-variant-numeric: tabular-nums; }
+th, td { padding: 9px 12px; text-align: right; border-bottom: 1px solid var(--line); }
+th { position: sticky; top: 0; background: var(--surface-2); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); }
+th:first-child, td:first-child { text-align: left; }
+tr.hit td { background: var(--brass-bg); font-weight: 600; }
+.foot { font-size: 13px; color: var(--ink-soft); }
+nav { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--line); padding: 6px 16px calc(6px + env(safe-area-inset-bottom, 0px)); }
+nav ul { list-style: none; margin: 0 auto; padding: 0; max-width: 560px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+nav li { display: flex; }
+nav button { flex: 1; border: 0; background: transparent; text-align: center; padding: 10px 4px; border-radius: 8px; font-family: var(--f-display); font-size: 18px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); min-height: 48px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; }
+nav button[aria-current="page"] { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+nav button:disabled { opacity: .55; cursor: default; }
+nav button small { font-family: var(--f-data); font-size: 10px; letter-spacing: .06em; }
+.tab { display: flex; flex-direction: column; gap: 16px; }
+.formula { font-family: var(--f-data); font-size: 13px; background: var(--surface-2); border-radius: 6px; padding: 10px 12px; overflow-x: auto; white-space: pre; }
+select.small-in { appearance: auto; }
+@media (prefers-reduced-motion: no-preference) { .chip, .stepper button { transition: background .12s; } }
+
+[hidden] { display: none !important; }
+.brands { display: flex; flex-wrap: wrap; gap: 6px; }
+.note { border-left: 4px solid var(--accent); background: var(--surface); padding: 12px 14px; border-radius: 4px; font-size: 14px; }
+.note ul { margin: 6px 0 8px; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.alist { display: flex; flex-direction: column; gap: 8px; }
+.acard { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
+.acard summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 4px 12px; align-items: center; padding: 10px 12px; }
+.acard summary::-webkit-details-marker { display: none; }
+.acard summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+.acode { font-family: var(--f-display); font-weight: 700; font-size: 26px; line-height: 1; background: var(--brass-bg); color: var(--ink); border: 1px solid var(--brass); border-radius: 6px; padding: 8px 4px; text-align: center; overflow-wrap: anywhere; }
+.acode.long { font-size: 15px; line-height: 1.15; }
+.atitle { font-weight: 600; line-height: 1.3; min-width: 0; }
+.atag { grid-column: 2; font-family: var(--f-data); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); }
+.abody { border-top: 1px dashed var(--line); padding: 10px 14px 12px; font-size: 14px; }
+.abody ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+
+.psum { display: flex !important; align-items: center; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; }
+.pbody { display: flex; flex-direction: column; gap: 14px; }
+.pwbox { display: flex; flex-direction: column; gap: 8px; }
+.pwrow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px 12px; align-items: center; background: var(--brass-bg); border: 1px solid var(--brass); border-radius: 8px; padding: 10px 12px; }
+.pwval { font-family: var(--f-data); font-weight: 600; font-size: 22px; letter-spacing: .08em; min-width: 3ch; text-align: right; overflow-wrap: anywhere; }
+.steps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
+.pnotes { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; color: var(--ink-soft); }
+nav ul.four { grid-template-columns: repeat(4, 1fr); }
+nav ul.four button { font-size: 14px; letter-spacing: .02em; padding-inline: 2px; }
+
+.pnotes.plain { color: var(--ink); }
+nav ul.scroll { display: flex; overflow-x: auto; gap: 6px; scrollbar-width: none; }
+nav ul.scroll::-webkit-scrollbar { display: none; }
+nav ul.scroll li { flex: 0 0 auto; }
+nav ul.scroll button { font-size: 16px; padding-inline: 14px; white-space: nowrap; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">BURNER<span>TJ</span></div>
+    <div class="tag">Gasóleo y gas</div>
+  </header>
+
+  <div class="tab" id="tab-pulv">
+  <div>
+    <h2>Pulverizador</h2>
+    <p class="lead">Indica la potencia y la presión de bomba. Te doy el pulverizador en GPH (calibrado a 7 bar) o la mejor combinación para 2 llamas.</p>
+  </div>
+
+  <section class="panel" aria-label="Datos">
+    <div>
+      <div class="label" style="margin-bottom:6px">Tipo de quemador</div>
+      <div class="seg" role="radiogroup" aria-label="Número de llamas">
+        <input type="radio" name="fl" id="fl1" value="1" checked><label for="fl1">1 llama</label>
+        <input type="radio" name="fl" id="fl2" value="2"><label for="fl2">2 llamas</label>
+      </div>
+    </div>
+
+    <div class="fields">
+      <div class="field">
+        <label class="label" for="p1" id="p1lab">Potencia</label>
+        <div class="stepper">
+          <button type="button" data-step="-5" data-for="p1" aria-label="Restar 5 kW">−</button>
+          <input id="p1" type="number" inputmode="decimal" min="1" step="any" value="120">
+          <button type="button" data-step="5" data-for="p1" aria-label="Sumar 5 kW">+</button>
+        </div>
+        <span class="unit">kW</span>
+      </div>
+      <div class="field" id="p2box" hidden>
+        <label class="label" for="p2">Potencia 2ª llama (total)</label>
+        <div class="stepper">
+          <button type="button" data-step="-5" data-for="p2" aria-label="Restar 5 kW">−</button>
+          <input id="p2" type="number" inputmode="decimal" min="1" step="any" value="200">
+          <button type="button" data-step="5" data-for="p2" aria-label="Sumar 5 kW">+</button>
+        </div>
+        <span class="unit">kW (1ª + 2ª llama juntas)</span>
+      </div>
+      <div class="field">
+        <label class="label" for="bar">Presión de bomba</label>
+        <div class="stepper">
+          <button type="button" data-step="-0.5" data-for="bar" aria-label="Restar 0,5 bar">−</button>
+          <input id="bar" type="number" inputmode="decimal" min="5" step="any" value="12">
+          <button type="button" data-step="0.5" data-for="bar" aria-label="Sumar 0,5 bar">+</button>
+        </div>
+        <div class="chips" id="barchips"></div>
+      </div>
+    </div>
+
+    <details class="adv">
+      <summary>Datos del combustible</summary>
+      <div class="fields">
+        <div class="field"><label class="label" for="pci">PCI gasóleo (kWh/kg)</label><input class="small-in" id="pci" type="number" inputmode="decimal" step="any" value="11.86"></div>
+        <div class="field"><label class="label" for="den">Densidad (kg/l)</label><input class="small-in" id="den" type="number" inputmode="decimal" step="any" value="0.84"></div>
+      </div>
+    </details>
+  </section>
+
+  <div id="warns"></div>
+  <div id="out" style="display:flex;flex-direction:column;gap:12px" aria-live="polite"></div>
+
+  <section class="panel" aria-label="Tabla de referencia">
+    <div>
+      <h2 style="font-size:22px">Tabla a <span id="tbar">12</span> bar</h2>
+      <p class="foot" style="margin:4px 0 0">Caudal y potencia de cada pulverizador a la presión elegida. Se marcan los usados en el cálculo.</p>
+    </div>
+    <div class="tablewrap" style="max-height:420px">
+      <table>
+        <thead><tr><th>GPH</th><th>kg/h</th><th>l/h</th><th>kW</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <p class="foot" style="margin:0">Fórmula: caudal = GPH × 3,785 l/h × √(presión ÷ 7 bar). Potencia = kg/h × PCI. Los valores reales varían por tolerancia del pulverizador (±5 %), viscosidad y temperatura del gasóleo.</p>
+  </section>
+  </div>
+
+  <div class="tab" id="tab-pot" hidden>
+    <div>
+      <h2>Potencia por contador</h2>
+      <p class="lead">Quemador de gas. Lee los m³ que pasan por el contador en un tiempo (por defecto 60 s) con el quemador a fuego estable. La potencia se corrige por presión y temperatura del gas.</p>
+    </div>
+
+    <section class="panel" aria-label="Lectura del contador">
+      <div class="fields">
+        <div class="field">
+          <label class="label" for="gv">Volumen leído</label>
+          <input class="small-in" id="gv" type="number" inputmode="decimal" step="any" value="0.100">
+          <span class="unit">m³ (en el tiempo indicado)</span>
+        </div>
+        <div class="field">
+          <label class="label" for="gt">Tiempo</label>
+          <input class="small-in" id="gt" type="number" inputmode="decimal" step="any" value="60">
+          <span class="unit">segundos</span>
+        </div>
+        <div class="field">
+          <label class="label" for="gpr">Presión de gas en el contador</label>
+          <input class="small-in" id="gpr" type="number" inputmode="decimal" step="any" value="22">
+          <span class="unit">mbar (manométrica, la del manómetro)</span>
+        </div>
+        <div class="field">
+          <label class="label" for="gtemp">Temperatura del gas</label>
+          <input class="small-in" id="gtemp" type="number" inputmode="decimal" step="any" value="15">
+          <span class="unit">°C (en el contador)</span>
+        </div>
+        <div class="field">
+          <label class="label" for="galt">Altitud de la instalación</label>
+          <input class="small-in" id="galt" type="number" inputmode="decimal" step="any" value="50">
+          <span class="unit">metros sobre el nivel del mar</span>
+        </div>
+        <div class="field">
+          <label class="label" for="gtype">Gas</label>
+          <select class="small-in" id="gtype">
+            <option value="gn">Gas natural</option>
+            <option value="pro">Propano (GLP)</option>
+            <option value="but">Butano (GLP)</option>
+            <option value="mix">GLP mezcla propano/butano 50/50</option>
+            <option value="cus">Personalizado</option>
+          </select>
+          <span class="unit" id="ghint"></span>
+        </div>
+      </div>
+      <details class="adv">
+        <summary>Poder calorífico y precisión</summary>
+        <div class="fields">
+          <div class="field"><label class="label" for="gpcs">PCS (kWh/m³n)</label><input class="small-in" id="gpcs" type="number" inputmode="decimal" step="any" value="11.70"></div>
+          <div class="field"><label class="label" for="gpci">PCI (kWh/m³n)</label><input class="small-in" id="gpci" type="number" inputmode="decimal" step="any" value="10.54"></div>
+          <div class="field"><label class="label" for="gref">Condiciones de referencia del PCS</label>
+            <select class="small-in" id="gref"><option value="0">0 °C, 1,01325 bar (Enagás, facturas)</option><option value="15">15 °C, 1,01325 bar</option></select></div>
+          <div class="field"><label class="label" for="gres">Resolución del contador (m³)</label><input class="small-in" id="gres" type="number" inputmode="decimal" step="any" value="0.001"></div>
+          <div class="field"><label class="label" for="gacc">Precisión del contador (%)</label><input class="small-in" id="gacc" type="number" inputmode="decimal" step="any" value="1.5"></div>
+        </div>
+        <p class="foot" style="margin:12px 0 0">Para gas natural usa el PCS de tu última factura o el publicado por Enagás. Al cambiar el PCS, el PCI se recalcula con la relación PCI/PCS del gas elegido (0,901 en gas natural); puedes ajustarlo a mano.</p>
+      </details>
+    </section>
+
+    <div id="gwarns"></div>
+    <div id="gout" style="display:flex;flex-direction:column;gap:12px" aria-live="polite"></div>
+
+    <section class="panel" aria-label="Fórmula">
+      <h2 style="font-size:22px">Fórmula aplicada</h2>
+<div class="formula">Q     = V · 3600 / t                     (m³/h medidos)
+p_atm = 1013,25 · (1 − 2,25577·10⁻⁵ · h)^5,25588   (mbar)
+Fp    = (p_atm + p_gas) / 1013,25
+Ft    = (273,15 + T_ref) / (273,15 + T_gas)
+Qn    = Q · Fp · Ft                      (m³n/h)
+P     = Qn · PCI        (potencia útil de placa)
+P_PCS = Qn · PCS        (base de facturación)</div>
+      <p class="foot" style="margin:0">La placa del quemador y la potencia térmica nominal se dan sobre PCI; la factura de gas se calcula sobre PCS. Se desprecia la humedad del gas y el factor de compresibilidad, que a estas presiones no llegan al 0,2 %.</p>
+    </section>
+  </div>
+
+  <div class="tab" id="tab-ave" hidden>
+    <div>
+      <h2>Averías</h2>
+      <p class="lead">Elige la centralita y escribe el código que ves, o una palabra como «llama» o «aire». Primera versión: revisa siempre el manual del fabricante en averías de seguridad.</p>
+    </div>
+    <section class="panel" aria-label="Búsqueda de averías">
+      <div class="field">
+        <span class="label">Centralita</span>
+        <div class="brands" id="abrands" role="group" aria-label="Centralita"></div>
+      </div>
+      <div class="field">
+        <label class="label" for="aq">Código o palabra</label>
+        <input class="small-in" id="aq" type="search" placeholder="Ej. 3, 2D, llama, presión de aire" autocomplete="off">
+      </div>
+    </section>
+    <div id="ainfo"></div>
+    <div id="alist" class="alist" aria-live="polite"></div>
+    <p class="foot">Los textos son un resumen de manuales públicos. Un bloqueo por seguridad se investiga, no se resetea sin más.</p>
+  </div>
+
+  <div class="tab" id="tab-prog" hidden>
+    <div>
+      <h2>Acceso a programación</h2>
+      <p class="lead">Cómo entrar en el nivel de parámetros de cada centralita. Las claves salen ocultas: pulsa Mostrar cuando las necesites.</p>
+    </div>
+    <div class="msg">Los parámetros incluyen tiempos de seguridad y ajustes de combustión. Anota cada cambio, comprueba la combustión después y no dejes las claves de fábrica en una instalación ajena.</div>
+    <div id="plist" class="alist"></div>
+  </div>
+
+  <div class="tab" id="tab-curva" hidden>
+    <div>
+      <h2>Curva de combustión</h2>
+      <p class="lead">Cómo entrar en la curva aire-combustible de cada centralita para revisarla con el analizador de gases.</p>
+    </div>
+    <div class="msg">La curva regula la combustión en todo el rango de potencia. Cualquier cambio se comprueba con analizador en cada punto, y se anota el valor antes y después.</div>
+    <div id="clist" class="alist"></div>
+  </div>
+</div>
+
+<nav aria-label="Secciones">
+  <ul class="scroll">
+    <li><button type="button" data-tab="pulv" aria-current="page">Pulverizador</button></li>
+    <li><button type="button" data-tab="pot">Potencia</button></li>
+    <li><button type="button" data-tab="ave">Averías</button></li>
+    <li><button type="button" data-tab="prog">Acceso</button></li>
+    <li><button type="button" data-tab="curva">Curva</button></li>
+  </ul>
+</nav>
+
+<script>
+(function () {
+  var SIZES = [0.30,0.35,0.40,0.50,0.60,0.65,0.75,0.85,1.00,1.10,1.20,1.25,1.35,1.50,1.65,1.75,2.00,2.25,2.50,2.75,3.00,3.50,4.00,4.50,5.00,5.50,6.00,6.50,7.00,7.50,8.30,9.50,10.50,12.00,13.80,15.30,17.50,19.50,21.50,24.00,28.00,30.00];
+  var GAL = 3.785, PREF = 7;
+  var $ = function (id) { return document.getElementById(id); };
+
+  function num(id, d) { var v = parseFloat(String($(id).value).replace(',', '.')); return isFinite(v) ? v : d; }
+  function fmtG(g) { return g.toFixed(2).replace('.', ','); }
+  function f1(x) { return x.toFixed(1).replace('.', ','); }
+  function f0(x) { return Math.round(x).toString(); }
+
+  function ctx() {
+    var bar = num('bar', 12), pci = num('pci', 11.86), den = num('den', 0.84);
+    var lh = GAL * Math.sqrt(bar / PREF); // l/h por GPH
+    return { bar: bar, pci: pci, den: den, lh: lh, kgh: lh * den, kw: lh * den * pci };
+  }
+  function kwOf(g, c) { return g * c.kw; }
+  function devCls(d) { var a = Math.abs(d); return a <= 3 ? 'ok' : a <= 6 ? 'warn' : 'bad'; }
+  function devTxt(d) { return (d > 0 ? '+' : d < 0 ? '−' : '') + Math.abs(d).toFixed(1).replace('.', ',') + ' %'; }
+  function devLabel(d) { var a = Math.abs(d); return a <= 3 ? 'ajuste bueno' : a <= 6 ? 'ajuste aceptable' : 'ajuste flojo'; }
+  function devHtml(real, target) { var d = (real - target) / target * 100; return '<span class="dev ' + devCls(d) + '">' + devTxt(d) + ' · ' + devLabel(d) + '</span>'; }
+
+  function nearest(target, c) {
+    var best = [];
+    SIZES.forEach(function (g) { best.push({ g: g, e: Math.abs(kwOf(g, c) - target) / target }); });
+    best.sort(function (a, b) { return a.e - b.e; });
+    return best;
+  }
+
+  function kvHtml(g, c) {
+    return '<div class="kv">' +
+      '<div><span>Potencia real</span><b>' + f1(kwOf(g, c)) + ' kW</b></div>' +
+      '<div><span>Caudal</span><b>' + f1(g * c.kgh) + ' kg/h</b></div>' +
+      '<div><span>Caudal</span><b>' + f1(g * c.lh) + ' l/h</b></div></div>';
+  }
+
+  var used = [];
+  function render() {
+    var c = ctx(), two = $('fl2').checked;
+    var out = $('out'), warns = [];
+    used = [];
+    $('p2box').hidden = !two;
+    $('p1lab').textContent = two ? 'Potencia 1ª llama' : 'Potencia';
+    $('tbar').textContent = String(c.bar).replace('.', ',');
+    var p1 = num('p1', 0), p2 = num('p2', 0);
+
+    if (c.bar < 7 || c.bar > 20) warns.push('Presión fuera del rango habitual (7 a 20 bar). Comprueba el valor: la mayoría de bombas de quemador trabajan entre 10 y 14 bar.');
+    if (!(p1 > 0)) { out.innerHTML = ''; $('warns').innerHTML = ''; buildTable(c); return; }
+
+    var h = '';
+    if (!two) {
+      var n = nearest(p1, c);
+      var a = n[0], b = n[1];
+      used.push(a.g);
+      var minK = kwOf(SIZES[0], c), maxK = kwOf(SIZES[SIZES.length - 1], c);
+      if (p1 > maxK * 1.02 || p1 < minK * 0.98) warns.push('Esa potencia queda fuera de un solo pulverizador estándar a esta presión (' + f0(minK) + ' a ' + f0(maxK) + ' kW). Revisa el dato.');
+      h += '<div class="plate"><div class="kicker">Pulverizador recomendado</div>' +
+        '<div class="big">' + fmtG(a.g) + '<small>GPH</small></div>' +
+        '<div>' + devHtml(kwOf(a.g, c), p1) + '</div>' + kvHtml(a.g, c) + '</div>';
+      // alternativa: la mejor del lado contrario
+      var below = kwOf(a.g, c) < p1, alt = null;
+      for (var i = 1; i < n.length; i++) { if (below ? n[i].g > a.g : n[i].g < a.g) { alt = n[i]; break; } }
+      if (alt) {
+        used.push(alt.g);
+        h += '<div class="plate alt"><div class="kicker">Alternativa ' + (alt.g > a.g ? 'superior' : 'inferior') + '</div>' +
+          '<div class="big sm">' + fmtG(alt.g) + '<small>GPH</small></div>' +
+          '<div>' + devHtml(kwOf(alt.g, c), p1) + '</div>' + kvHtml(alt.g, c) + '</div>';
+      }
+    } else {
+      if (!(p2 > p1)) {
+        warns.push('La potencia de la 2ª llama es el total y debe ser mayor que la de la 1ª.');
+      } else {
+        var pairs = [];
+        SIZES.forEach(function (g1) {
+          SIZES.forEach(function (g2) {
+            var e1 = Math.abs(kwOf(g1, c) - p1) / p1, e2 = Math.abs(kwOf(g1 + g2, c) - p2) / p2;
+            pairs.push({ g1: g1, g2: g2, score: e1 + e2 });
+          });
+        });
+        pairs.sort(function (x, y) { return x.score - y.score; });
+        var top = pairs.slice(0, 3);
+        top.forEach(function (p, idx) {
+          used.push(p.g1); used.push(p.g2);
+          var k1 = kwOf(p.g1, c), kt = kwOf(p.g1 + p.g2, c);
+          h += '<div class="plate' + (idx ? ' alt' : '') + '"><div class="kicker">' + (idx ? 'Opción ' + (idx + 1) : 'Mejor relación') + '</div>' +
+            '<div class="stage">' +
+            '<div><div class="label">1ª llama</div><div class="big' + (idx ? ' sm' : '') + '">' + fmtG(p.g1) + '<small>GPH</small></div></div>' +
+            '<div><div class="label">2ª llama (añade)</div><div class="big' + (idx ? ' sm' : '') + '">' + fmtG(p.g2) + '<small>GPH</small></div></div></div>' +
+            '<div class="split">' +
+            '<div><div class="label" style="margin-bottom:4px">1ª llama · ' + f1(k1) + ' kW (objetivo ' + f1(p1) + ')</div>' + devHtml(k1, p1) + '</div>' +
+            '<div><div class="label" style="margin-bottom:4px">2ª llama total · ' + f1(kt) + ' kW (objetivo ' + f1(p2) + ')</div>' + devHtml(kt, p2) + '</div>' +
+            '<div class="kv"><div><span>Reparto 1ª / total</span><b>' + f0(k1 / kt * 100) + ' %</b></div><div><span>Objetivo</span><b>' + f0(p1 / p2 * 100) + ' %</b></div><div><span>Caudal total</span><b>' + f1((p.g1 + p.g2) * c.kgh) + ' kg/h</b></div></div>' +
+            '</div></div>';
+        });
+        if (p1 / p2 < 0.35) warns.push('La 1ª llama es menos del 35 % del total. Comprueba que el quemador arranca estable con tan poco caudal.');
+      }
+    }
+    out.innerHTML = h;
+    $('warns').innerHTML = warns.map(function (w) { return '<div class="msg">' + w + '</div>'; }).join('');
+    buildTable(c);
+    save();
+  }
+
+  function buildTable(c) {
+    var rows = '';
+    SIZES.forEach(function (g) {
+      var hit = used.indexOf(g) > -1;
+      rows += '<tr' + (hit ? ' class="hit"' : '') + '><td>' + fmtG(g) + '</td><td>' + f1(g * c.kgh) + '</td><td>' + f1(g * c.lh) + '</td><td>' + f1(kwOf(g, c)) + '</td></tr>';
+    });
+    $('tbody').innerHTML = rows;
+  }
+
+  // presión rápida
+  var chips = $('barchips');
+  [10, 11, 12, 14, 16].forEach(function (b) {
+    var el = document.createElement('button');
+    el.type = 'button'; el.className = 'chip'; el.textContent = b + ' bar'; el.dataset.b = b;
+    el.addEventListener('click', function () { $('bar').value = b; syncChips(); render(); });
+    chips.appendChild(el);
+  });
+  function syncChips() {
+    var v = num('bar', 12);
+    Array.prototype.forEach.call(chips.children, function (el) { el.setAttribute('aria-pressed', String(parseFloat(el.dataset.b) === v)); });
+  }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-step]'); if (!t) return;
+    var inp = $(t.dataset.for), s = parseFloat(t.dataset.step);
+    var v = num(t.dataset.for, 0) + s; if (v < 0) v = 0;
+    inp.value = Math.round(v * 100) / 100; syncChips(); render();
+  });
+  ['p1', 'p2', 'bar', 'pci', 'den', 'fl1', 'fl2'].forEach(function (id) {
+    $(id).addEventListener('input', function () { syncChips(); render(); });
+    $(id).addEventListener('change', function () { syncChips(); render(); });
+  });
+
+  function save() {
+    try { localStorage.setItem('burnertj', JSON.stringify({ fl: $('fl2').checked ? 2 : 1, p1: $('p1').value, p2: $('p2').value, bar: $('bar').value, pci: $('pci').value, den: $('den').value })); } catch (e) {}
+  }
+  try {
+    var s = JSON.parse(localStorage.getItem('burnertj') || 'null');
+    if (s) { $('p1').value = s.p1; $('p2').value = s.p2; $('bar').value = s.bar; $('pci').value = s.pci; $('den').value = s.den; if (s.fl === 2) $('fl2').checked = true; }
+  } catch (e) {}
+  syncChips(); render();
+})();
+</script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function n(id, d) { var v = parseFloat(String($(id).value).replace(',', '.')); return isFinite(v) ? v : d; }
+  function fx(x, d) { return x.toFixed(d).replace('.', ','); }
+
+  // PCS y PCI en kWh/m3n (0 °C, 1,01325 bar). PCI/PCS aproximado por gas.
+  var GAS = {
+    gn:  { pcs: 11.70, pci: 10.54 },
+    pro: { pcs: 28.20, pci: 26.00 },
+    but: { pcs: 37.20, pci: 34.40 },
+    mix: { pcs: 32.70, pci: 30.20 },
+    cus: null
+  };
+  var HINT = {
+    gn: 'Presión habitual en contador: 20 a 22 mbar (baja presión).',
+    pro: 'Presión habitual: 37 mbar tras el regulador.',
+    but: 'Presión habitual: 28 a 30 mbar tras el regulador.',
+    mix: 'Presión habitual: 37 mbar. Ajusta PCS/PCI si conoces la proporción real.',
+    cus: 'Introduce tus valores de PCS y PCI.'
+  };
+  function hint() { $('ghint').textContent = HINT[$('gtype').value] || ''; }
+
+  function calc() {
+    var V = n('gv', 0), t = n('gt', 0), pg = n('gpr', 0), T = n('gtemp', 15), h = n('galt', 0);
+    var pcs = n('gpcs', 0), pci = n('gpci', 0), Tref = parseFloat($('gref').value);
+    var res = n('gres', 0), acc = n('gacc', 0);
+    var out = $('gout'), w = [];
+    if (!(V > 0) || !(t > 0)) { out.innerHTML = '<div class="msg">Introduce el volumen leído y el tiempo.</div>'; $('gwarns').innerHTML = ''; return; }
+
+    var Q = V * 3600 / t;
+    var patm = 1013.25 * Math.pow(1 - 2.25577e-5 * h, 5.25588);
+    var Fp = (patm + pg) / 1013.25;
+    var Ft = (273.15 + Tref) / (273.15 + T);
+    var Qn = Q * Fp * Ft;
+    var Pn = Qn * pci, Ps = Qn * pcs, Praw = Q * pci;
+    var corr = (Fp * Ft - 1) * 100;
+    // incertidumbre orientativa: resolución del contador, cronometraje (±0,5 s) y precisión del contador
+    var uRes = res / V * 100, uT = 0.5 / t * 100;
+    var u = Math.sqrt(uRes * uRes + uT * uT + acc * acc);
+
+    if (t < 30) w.push('Con menos de 30 s el error de cronometraje y de lectura pesa mucho. Mide 60 s o más.');
+    if (uRes > 1) w.push('Has leído poco volumen: la resolución del contador aporta un ±' + fx(uRes, 1) + ' % de error. Alarga el tiempo para leer más m³.');
+    if (pg > 400) w.push('Presión de gas muy alta para un contador doméstico. Comprueba que estás poniendo mbar y no bar.');
+    if (T < -10 || T > 45) w.push('Temperatura del gas fuera de lo habitual. Comprueba el dato.');
+    if (pci > pcs) w.push('El PCI no puede ser mayor que el PCS. Revisa los poderes caloríficos.');
+
+    out.innerHTML =
+      '<div class="plate"><div class="kicker">Potencia del quemador (PCI)</div>' +
+      '<div class="big">' + fx(Pn, 1) + '<small>kW</small></div>' +
+      '<div><span class="dev ok">± ' + fx(Pn * u / 100, 1) + ' kW · incertidumbre orientativa ' + fx(u, 1) + ' %</span></div>' +
+      '<div class="kv">' +
+      '<div><span>Sobre PCS</span><b>' + fx(Ps, 1) + ' kW</b></div>' +
+      '<div><span>En kcal/h</span><b>' + Math.round(Pn * 860).toLocaleString('es-ES') + '</b></div>' +
+      '<div><span>Caudal medido</span><b>' + fx(Q, 2) + ' m³/h</b></div>' +
+      '<div><span>Caudal normal</span><b>' + fx(Qn, 2) + ' m³n/h</b></div></div></div>' +
+      '<div class="plate alt"><div class="kicker">Correcciones aplicadas</div><div class="kv">' +
+      '<div><span>Presión atm.</span><b>' + fx(patm, 1) + ' mbar</b></div>' +
+      '<div><span>Factor presión</span><b>' + fx(Fp, 4) + '</b></div>' +
+      '<div><span>Factor temperatura</span><b>' + fx(Ft, 4) + '</b></div>' +
+      '<div><span>Efecto total</span><b>' + (corr >= 0 ? '+' : '−') + fx(Math.abs(corr), 1) + ' %</b></div>' +
+      '<div><span>Sin corregir (PCI)</span><b>' + fx(Praw, 1) + ' kW</b></div></div></div>';
+    $('gwarns').innerHTML = w.map(function (x) { return '<div class="msg">' + x + '</div>'; }).join('');
+    save();
+  }
+
+  var ratio = 0.901;
+  function applyType() {
+    var g = GAS[$('gtype').value];
+    if (g) { $('gpcs').value = g.pcs.toFixed(2); $('gpci').value = g.pci.toFixed(2); ratio = g.pci / g.pcs; }
+    else ratio = n('gpci', 10.54) / n('gpcs', 11.7);
+  }
+  $('gtype').addEventListener('change', function () { applyType(); hint(); calc(); });
+  $('gpcs').addEventListener('input', function () {
+    if ($('gtype').value !== 'cus') { $('gpci').value = (n('gpcs', 0) * ratio).toFixed(2); }
+    calc();
+  });
+  $('gpci').addEventListener('input', function () { $('gtype').value = 'cus'; calc(); });
+  ['gv', 'gt', 'gpr', 'gtemp', 'galt', 'gref', 'gres', 'gacc'].forEach(function (id) {
+    $(id).addEventListener('input', calc); $(id).addEventListener('change', calc);
+  });
+
+  var IDS = ['gv', 'gt', 'gpr', 'gtemp', 'galt', 'gtype', 'gpcs', 'gpci', 'gref', 'gres', 'gacc'];
+  function save() {
+    try { var o = {}; IDS.forEach(function (i) { o[i] = $(i).value; }); localStorage.setItem('burnertj-gas', JSON.stringify(o)); } catch (e) {}
+  }
+  try {
+    var s = JSON.parse(localStorage.getItem('burnertj-gas') || 'null');
+    if (s) IDS.forEach(function (i) { if (s[i] != null) $(i).value = s[i]; });
+  } catch (e) {}
+  ratio = GAS[$('gtype').value] ? GAS[$('gtype').value].pci / GAS[$('gtype').value].pcs : 0.901;
+  hint();
+
+  // navegación entre secciones
+  var tabs = { pulv: $('tab-pulv'), pot: $('tab-pot'), ave: $('tab-ave'), prog: $('tab-prog'), curva: $('tab-curva') };
+  function show(name) {
+    Object.keys(tabs).forEach(function (k) { tabs[k].hidden = k !== name; });
+    Array.prototype.forEach.call(document.querySelectorAll('nav button[data-tab]'), function (b) {
+      if (b.dataset.tab === name) { b.setAttribute('aria-current', 'page'); try { b.scrollIntoView({ inline: 'center', block: 'nearest' }); } catch (e) {} } else b.removeAttribute('aria-current');
+    });
+    try { localStorage.setItem('burnertj-tab', name); } catch (e) {}
+    window.scrollTo(0, 0);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('nav button[data-tab]'), function (b) {
+    b.addEventListener('click', function () { show(b.dataset.tab); });
+  });
+  var last = 'pulv';
+  try { last = localStorage.getItem('burnertj-tab') || 'pulv'; } catch (e) {}
+  if (!tabs[last]) last = 'pulv';
+  show(last);
+  calc();
+})();
+</script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function norm(s) { return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+  function E(c, t, g) { return { c: c, t: t, g: g, d: Array.prototype.slice.call(arguments, 3) }; }
+
+  var LED_LME2 = [
+    E('Apagado', 'Tiempo de espera y otros estados de espera', 'led'),
+    E('Amarillo parpadeante', 'Fase de encendido, encendido controlado', 'led'),
+    E('Verde', 'Funcionamiento, llama correcta', 'led'),
+    E('Verde parpadeante', 'Funcionamiento, llama no correcta', 'led'),
+    E('Verde y rojo', 'Luz extraña al arrancar el quemador', 'led'),
+    E('Amarillo y rojo', 'Baja tensión', 'led'),
+    E('Rojo fijo', 'Avería, alarma (bloqueo)', 'led', 'Para ver el código: mantén reset pulsado más de 3 s.'),
+    E('Rojo parpadeante', 'Salida del código de error', 'led', 'Cuenta los parpadeos rojos entre pausas y busca el número en la tabla.'),
+    E('Rojo parpadeo rápido', 'Diagnóstico de interfaz', 'led')
+  ];
+
+  var B = [
+    {
+      id: 'lme2', name: 'LME 21 / 22 / 23',
+      how: ['Con el LED rojo fijo (bloqueo), mantén pulsado el reset más de 3 s. El LED pasa a parpadear en rojo: cuenta los parpadeos de cada serie, que se repite con una pausa. Ese número es el código.',
+        'Para desbloquear, pulsa reset menos de 3 s. Procedimiento tomado del manual LME 7x; confírmalo en tu modelo si la ficha es distinta.',
+        'La misma tabla sirve para la familia LME 11, 21, 22, 23, 41 y 44 según la ficha.'],
+      src: 'Ficha técnica Siemens CC1N7101 (LME11/21/22/23/41/44).',
+      codes: [
+        E('2', 'Sin llama al final del tiempo de seguridad (TSA)', 'llama', 'Válvulas de combustible defectuosas o sucias.', 'Detector de llama defectuoso o sucio.', 'Mala regulación del quemador o falta de combustible.', 'Equipo de encendido defectuoso.', 'Alarma en borne 10: activada.'),
+        E('3', 'Presostato de aire (LP) defectuoso', 'aire', 'Pérdida de la señal de presión de aire pasado el tiempo t10.', 'Presostato de aire soldado en posición de reposo.', 'Alarma en borne 10: activada.'),
+        E('4', 'Luz extraña al arrancar el quemador', 'llama', 'Detector de llama que ve luz sin haber llama.', 'Alarma en borne 10: activada.'),
+        E('5', 'Supervisión de tiempo del presostato de aire (LP)', 'aire', 'Presostato de aire soldado en posición de trabajo.', 'Error en el control de estanqueidad de válvulas.', 'Alarma en borne 10: activada.'),
+        E('6', 'Sin asignar', 'libre'),
+        E('7', 'Demasiadas pérdidas de llama en funcionamiento', 'llama', 'Se ha superado el límite de repeticiones.', 'Válvulas de combustible defectuosas o sucias.', 'Detector de llama defectuoso o sucio.', 'Mala regulación del quemador.'),
+        E('8', 'Sin asignar', 'libre'),
+        E('9', 'Sin asignar', 'libre'),
+        E('10', 'Error de cableado, error interno, contactos de salida u otras averías', 'interno', 'Revisa el cableado y las tensiones antes de sustituir la centralita.', 'Alarma en borne 10: desactivada.'),
+        E('14', 'Contacto CPI no cerrado', 'válvulas', 'El contacto de posición cerrada de la válvula (CPI/POC) no está cerrado cuando debe.')
+      ].concat(LED_LME2)
+    },
+    {
+      id: 'lme7', name: 'LME 7x',
+      how: ['Tras el bloqueo el LED queda rojo fijo. Mantén el botón info/reset más de 3 s: el LED parpadea en rojo y cuentas los parpadeos. Otro pulso de más de 3 s activa el diagnóstico de interfaz (LED rojo tenue titilante); repite otros 3 s para salir.',
+        'Para desbloquear, pulsa reset unos 1 s (menos de 3 s).',
+        'Con display AZL2x, el código sale como «Loc: n». Con solo el LED, los códigos de 15 en adelante salen como 15 parpadeos; el número exacto se ve en el display AZL2x.'],
+      src: 'Manual base Siemens LME7 CC1P7105en (versión 01.01).',
+      codes: [
+        E('2', 'Sin llama al final del tiempo de seguridad (TSA)', 'llama', 'Válvulas de combustible defectuosas o sucias.', 'Detector de llama defectuoso o sucio.', 'Mala regulación del quemador, sin combustible.', 'Equipo de encendido defectuoso.'),
+        E('3', 'Presostato de aire (LP) defectuoso', 'aire', 'Pérdida de presión de aire pasado el tiempo t10.', 'Presostato de aire soldado en posición de reposo.'),
+        E('4', 'Luz extraña al arrancar el quemador', 'llama'),
+        E('5', 'Supervisión de tiempo del presostato de aire (LP)', 'aire', 'Presostato de aire soldado en posición de trabajo.'),
+        E('6', 'Posición del servomotor no alcanzada', 'actuador', 'Servomotor defectuoso o bloqueado.', 'Leva mal ajustada o mal ajuste.', 'Conexión errónea.'),
+        E('7', 'Demasiadas pérdidas de llama en funcionamiento', 'llama', 'Límite de repeticiones superado.', 'Válvulas de combustible defectuosas o sucias.', 'Detector de llama defectuoso o sucio.', 'Mala regulación del quemador.'),
+        E('8', 'Sin asignar', 'libre'),
+        E('9', 'Sin asignar', 'libre'),
+        E('10', 'Error de cableado, error interno, contactos de salida u otras averías', 'interno'),
+        E('12', 'Control de estanqueidad: válvula 1 (V1) con fuga', 'válvulas'),
+        E('13', 'Control de estanqueidad: válvula 2 (V2) con fuga', 'válvulas'),
+        E('14', 'Error en el control de cierre de válvula POC', 'válvulas'),
+        E('15 → Loc 20', 'Presostato de mínima de gas abierto', 'gas', 'Falta de gas.', 'En pantalla AZL2x aparece como «Loc: 20».'),
+        E('15 → Loc 22', 'Cadena de seguridad abierta', 'seguridad', 'Presostato de máxima de gas abierto.', 'Limitador de temperatura de seguridad disparado.', 'En pantalla AZL2x aparece como «Loc: 22».'),
+        E('Loc 60', 'Entrada analógica 4…20 mA con menos de 4 mA', 'cableado', 'Rotura de cable.'),
+        E('Loc 138', 'Restauración de datos realizada correctamente', 'info'),
+        E('Loc 139', 'No se detecta el módulo de programa', 'parámetros', 'No hay módulo de programa insertado.'),
+        E('Loc 167', 'Bloqueo manual', 'info'),
+        E('Err PrC', 'Fallo del módulo de programa', 'parámetros', 'Error en los datos del módulo.', 'No hay módulo insertado.'),
+        E('bAC Er3', 'Módulo incompatible con la unidad base durante la copia de seguridad', 'parámetros', 'La secuencia del módulo no coincide con la unidad base.'),
+        E('rSt Er1', 'Módulo incompatible durante la restauración', 'parámetros', 'La secuencia del módulo no coincide con la unidad base.'),
+        E('rSt Er2', 'Módulo incompatible durante la restauración', 'parámetros', 'El hardware de la unidad base no coincide con el módulo.', 'Módulo defectuoso.'),
+        E('rSt Er3', 'Error durante la restauración', 'parámetros', 'Módulo retirado durante el proceso de restauración.'),
+        E('P01', 'Espera: baja tensión (LED rojo/amarillo parpadeante)', 'espera'),
+        E('P02', 'Espera: cadena de seguridad abierta (LED amarillo)', 'espera'),
+        E('P04', 'Espera: luz extraña en el arranque (LED rojo/verde parpadeante)', 'espera', 'Bloquea si persiste 30 s.'),
+        E('P90', 'Espera: presostato de mínima abierto (LED amarillo)', 'espera'),
+        E('Amarillo parpadeante', 'Fase de encendido (preencendido, tiempo de seguridad TSA1)', 'led'),
+        E('Verde', 'Funcionamiento, llama correcta', 'led'),
+        E('Verde parpadeante', 'Funcionamiento, llama no correcta', 'led'),
+        E('Verde y rojo', 'Luz extraña en el arranque', 'led'),
+        E('Amarillo y rojo', 'Baja tensión', 'led'),
+        E('Rojo fijo', 'Avería, alarma', 'led'),
+        E('Amarillo', 'Petición de calor', 'led'),
+        E('Amarillo, amarillo, rojo', 'Módulo de programa nuevo', 'led')
+      ]
+    },
+    {
+      id: 'lmv3', name: 'LMV 2x / 3x',
+      how: ['Anota el código de error y el código de diagnóstico que muestra la unidad (display AZL2x).',
+        'Cada error tiene un código y, en muchos casos, un código de diagnóstico que concreta la causa. Aquí se muestra el código y el diagnóstico va en la lista.',
+        'Tabla válida para toda la gama LMV2x y LMV3x. La lista corresponde a la versión de software V03.10.'],
+      src: 'Manual base Siemens LMV37.4 CC1P7546en (versión de software V03.10), capítulo Lista de códigos de error.',
+      codes: [
+        E('2', 'Sin llama al final del tiempo de seguridad (TSA)', 'llama', 'Diag. 1: sin llama al final del tiempo de seguridad 1 (TSA1).', 'Diag. 2: sin llama al final del tiempo de seguridad 2 (TSA2).'),
+        E('3', 'Fallo de presión de aire', 'aire', 'Diag. 0: presión de aire desconectada.', 'Diag. 1: presión de aire conectada.', 'Diag. 4: presión de aire conectada, impide el arranque.'),
+        E('4', 'Luz extraña', 'llama', 'Diag. 0: luz extraña durante el arranque.', 'Diag. 1: luz extraña durante la parada.', 'Diag. 2: luz extraña en el arranque, impide el arranque.'),
+        E('7', 'Pérdida de llama', 'llama', 'Diag. 0: pérdida de llama.', 'Diag. 3…255: pérdida de llama durante la prueba TÜV. El valor indica el tiempo entre el cierre de las válvulas y la detección de llama (resolución 0,2 s: valor 5 = 1 s).'),
+        E('12', 'Control de estanqueidad de válvulas', 'válvulas', 'Diag. 0: válvula 1 (V1) con fuga. Comprueba si la válvula del lado del gas pierde, si hay circuito abierto y si el presostato de estanqueidad está cerrado con presión de gas.', 'Diag. 1: válvula 2 (V2) con fuga. Comprueba la válvula del lado quemador y que no haya cortocircuito.'),
+        E('14', 'POC (contacto de posición cerrada)', 'válvulas', 'Diag. 0: POC abierto. Comprueba que el contacto de cierre de la válvula está cerrado y el cableado.', 'Diag. 1: POC cerrado. Comprueba que el contacto abre cuando se activa la válvula.', 'Diag. 64: POC abierto, impide el arranque.'),
+        E('20', 'Presostato de mínima (Pmin)', 'gas', 'Diag. 0: sin presión mínima de gas/combustible. Revisa circuito abierto.', 'Diag. 1: falta de gas, impide el arranque.'),
+        E('21', 'Presostato de máxima (Pmax) / POC', 'gas', 'Diag. 0: presión máxima de gas/combustible superada. Revisa cableado y circuito abierto.', 'En versiones ≤ V02.00 también indica estados POC (0 abierto, 1 cerrado, 64 abierto impide arranque).'),
+        E('22', 'Cadena de seguridad / brida del quemador', 'seguridad', 'Diag. 0: cadena de seguridad o brida del quemador abierta.', 'Diag. 1: abierta, impide el arranque.'),
+        E('70', 'Error del control aire-combustible: cálculo de posición modulante', 'actuador', 'Diag. 23: salida no válida.', 'Diag. 26: puntos de curva sin definir. Ajusta los puntos de curva de todos los servomotores.'),
+        E('71', 'Posición especial sin definir', 'parámetros', 'Diag. 0: posición de reposo. 1: prebarrido. 2: postbarrido. 3: encendido.', 'Parametriza la posición indicada para todos los servomotores utilizados.'),
+        E('80', 'Límite del rango de control del variador (VSD)', 'variador', 'La unidad no pudo corregir la diferencia de velocidad.', 'Repite la normalización del motor. Revisa los ajustes del aire-combustible después.', 'Comprueba que las rampas del variador no sean más largas que las de la unidad base.', 'Comprueba que la característica del variador sea lineal y la entrada de tensión.', 'El variador no sigue con rapidez los cambios: filtro de entrada, compensación de deslizamiento.', 'Diag. 1: límite inferior (velocidad demasiado alta). Diag. 2: límite superior (velocidad demasiado baja).'),
+        E('82', 'Error en la normalización de velocidad del variador', 'variador'),
+        E('83', 'Error de velocidad del variador', 'variador', 'No se ha alcanzado la velocidad requerida.'),
+        E('84', 'Pendiente de curva de los servomotores', 'actuador'),
+        E('85', 'Error de referencia de los servomotores', 'actuador'),
+        E('86', 'Error del servomotor de combustible', 'actuador'),
+        E('87', 'Error del servomotor de aire', 'actuador'),
+        E('93', 'Error en la captación de la señal de llama', 'llama'),
+        E('95…98', 'Error en la supervisión de relés', 'interno'),
+        E('111', 'Baja tensión de red', 'alimentación', 'El diagnóstico da el valor de tensión con un factor de conversión (consulta el manual).'),
+        E('112', 'Recuperación de la tensión de red', 'info', 'No es un error: provoca un reset al volver la alimentación.'),
+        E('116', 'Vida útil de diseño superada (250.000 arranques)', 'info', 'Se ha alcanzado el umbral de aviso. Conviene sustituir la unidad.'),
+        E('146', 'Timeout en la interfaz de automatización del edificio (Modbus)', 'comunicación'),
+        E('150', 'Prueba TÜV', 'info'),
+        E('167', 'Bloqueo manual', 'info', 'La unidad se ha bloqueado a mano.'),
+        E('200', 'Sistema sin errores', 'info'),
+        E('201', 'Impide el arranque: unidad sin parametrizar', 'parámetros', 'Diag. 1: sin modo de funcionamiento. 2..3: sin línea de combustible. 4..7: sin curvas. 8..15: sin velocidad normalizada. 16..31: no fue posible el backup o la restauración.'),
+        E('204', 'Parada de programa activa', 'info', 'No es un error. Aparece el número de fase.'),
+        E('207', 'Incompatibilidad de versión unidad base / AZL2x', 'comunicación'),
+        E('No Comm', 'Sin comunicación entre la unidad base y el AZL2x', 'comunicación', 'Revisa el cableado por circuito abierto o mal contacto.'),
+        E('50, 51, 55…58, 65…67, 72, 76, 90, 91, 99, 100, 105…110, 113, 115, 121…135, 137, 165, 168…171, 202, 203, 205, 208, 209, 240, 245, 250', 'Errores internos', 'interno', 'Haz un reset. Si se repite, sustituye la unidad.', 'En errores de EEPROM (121…135): haz un reset y repite la última parametrización.')
+      ]
+    },
+    {
+      id: 'lmv5', name: 'LMV 5x',
+      how: ['El display AZL5 muestra el código de error y el código de diagnóstico. Los códigos son hexadecimales (por ejemplo 3A).',
+        'En varios errores el diagnóstico es la suma en hexadecimal de varias causas (por ejemplo 01 aire + 02 combustible = 03).',
+        'Los errores de CANBus, tierras y apantallado son muy frecuentes: mira primero fusibles FU2 y FU3, el transformador AGG5.210 y el cable.'],
+      src: 'Manual de problemas LMV51/LMV52 (documento 20011356, 03/2009). Las acciones correctoras están resumidas y no cubre todos los diagnósticos.',
+      codes: [
+        E('01–06', 'Errores internos de la unidad base (ROM, RAM, comunicación entre µC1 y µC2, prueba del detector de llama, pruebas de hardware)', 'interno', 'Comprueba puesta a tierra (la causa más habitual), apantallado, conexiones flojas y cables de potencia demasiado cerca.', 'Si es esporádico, mejora la EMC. Si es continuo, cambia la unidad LMV5.', 'Código 05: comprueba el detector de llama y el aislamiento de sus cables; una temperatura alta en el LMV5 también puede provocarlo.'),
+        E('10', 'Fallo en dispositivos o cableado conectados a la unidad base (retroalimentación de contactos)', 'cableado', 'El diagnóstico indica la entrada afectada (fuel, gas, presostatos, transformador de encendido, ventilador, arranque, cadena de brida).', 'Comprueba los neutros de todos los interruptores y válvulas.', 'Comprueba cargas capacitivas que mantengan tensión en el borne tras desactivarlo: debe caer a cero en unos 10 ms.'),
+        E('11', 'Cortocircuito en la red de retroalimentación de contactos', 'cableado'),
+        E('15', 'Fallo de posicionamiento: servomotor o velocidad del ventilador no alcanzada', 'actuador', 'Diagnóstico como suma: 01 aire, 02 combustible, 04 aux1, 08 aux2, 10 variador, 20 aux3.', 'Un solo servomotor: comprueba que el par de la compuerta o válvula es menor que el del servomotor y que nada está atascado. Si no, cambia el servomotor.', 'Varios servomotores: revisa el CANBus y sus pantallas.', 'Variador: revisa el sensor de velocidad y filtros o retardos en la señal.'),
+        E('16', 'Fallo en el control de relación, corrector de O₂ o variador', 'parámetros', 'Diag. 00–05: curva de un servomotor o del variador no definida por completo. Define las posiciones y reajusta la curva.', 'Diag. 0A–0F: parámetros del regulador de O₂ fuera de rango. La curva de control de O₂ debe quedar 1 % de O₂ por debajo de la curva de relación y 0,5 % por encima de la curva de guarda.'),
+        E('17', 'Error de comunicación interna', 'interno', 'Si es esporádico, mejora la EMC. Si es continuo, cambia el LMV5.'),
+        E('18', 'Datos de curva de combustión no válidos', 'parámetros', 'Los valores de la curva deben estar entre 0,0 y 100,0 % (carga y variador) y entre 0,0° y 90,0° (servomotores). Corrígelos. Si ocurre en una unidad que ya funcionaba, cambia el LMV5.'),
+        E('19', 'Fallo interno del servomotor (canales del potenciómetro A y B distintos)', 'actuador', 'Diagnóstico como suma: 01 aire, 02 combustible, 04 aux1, 08 aux2, 20 aux3.', 'Si el fallo es constante, cambia el servomotor indicado. Después comprueba que los servomotores no oscilan en funcionamiento (parámetro MinActuatorStep y lazo PID).'),
+        E('1A', 'Pendiente de la curva del servomotor demasiado pronunciada', 'actuador', 'Máximos admitidos: 3,6° por 0,1 % de carga (rampa 30 s), 1,8° (rampa 60 s), 0,9° (rampa 120 s).'),
+        E('1B', 'Salida del modo de ajuste de parámetros en curso', 'parámetros', 'El ajuste de curvas sigue activo en fase 62. Trabaja en manual con el quemador encendido. También puede dispararlo el limitador de temperatura interno.'),
+        E('1C', 'Posición de encendido sin definir', 'parámetros', 'Diagnóstico como suma: 01 aire, 02 combustible, 04 aux1, 08 aux2, 10 variador, 20 aux3. Define la posición de encendido de cada servomotor, independiente por combustible.'),
+        E('1D', 'Fallo de tiempo de recorrido de servomotores o variador', 'actuador', 'Comprueba los parámetros TimeNoFlame y OperatRampMod: deben ser mayores que el tiempo de rampa de los servomotores.', 'Comprueba par de los servomotores, los dos fusibles de 12 V del lado derecho y la alimentación CANBus (12 VAC de los pines 1 y 4 a masa, que es el pin 2; 24 VAC entre los pines 1 y 4).'),
+        E('1E', 'Posición especial no alcanzada', 'actuador', 'Diagnóstico como suma: 01 aire, 02 combustible, 04 aux1, 08 aux2, 10 variador, 20 aux3.', 'Mismas comprobaciones que el error 1D. Con variador, revisa filtros o retardos en su señal de entrada.'),
+        E('1F', 'Fallo del módulo de variador (VSD)', 'variador', 'Diag. 01: prueba interna fallida. 02: el ventilador gira al revés (invierte el motor o la flecha de la rueda de velocidad). 03: pulsos del sensor distintos de lo esperado (holgura de unos 2 mm y cableado). 04: normalización cancelada. 05: los servomotores de aire no alcanzaron la posición de prebarrido. 06: prueba de velocidad fallida.'),
+        E('21', 'Cadena de seguridad abierta', 'seguridad', 'Revisa todos los interruptores de la cadena (nivel de agua bajo, limitadores de máxima) y el circuito de la brida del quemador.'),
+        E('22', 'Limitador de temperatura interno activado', 'seguridad', 'Se superó el valor parametrizado. Revisa la temperatura del quemador o caldera y el sensor en las entradas 1 y 4.'),
+        E('23', 'Luz extraña en el arranque', 'llama', 'Comprueba que la fuente de luz extraña no sea una llama real y corrige.', 'Con sensor QRI, la luz ambiente puede provocarlo: móntalo en una zona oscura. Comprueba también el refractario incandescente.'),
+        E('24', 'Luz extraña en la parada', 'llama', 'Si persiste tras la parada, el tiempo de postbarrido puede necesitar ser más largo o hay que usar otro detector.'),
+        E('25', 'Sin llama al final del tiempo de seguridad TSA1', 'llama', 'Con tren de gas con piloto: comprueba el cableado del transformador de encendido y de la válvula piloto.', 'Comprueba las válvulas manuales del piloto y la posición del registro de aire (ciérralo si hace falta, el piloto puede apagarse).', 'Comprueba la señal del detector de llama con una fuente de llama y sustitúyelo si no genera la señal esperada.'),
+        E('26', 'Pérdida de llama en funcionamiento (fases 60–62)', 'llama', 'Comprueba la señal del detector de llama. Comprueba si la señal decae al calentarse el quemador (típico en detectores UV).'),
+        E('27', 'Presión de aire presente cuando debería estar apagada', 'aire', 'Asegura que el ventilador arranca en la fase que corresponde y que el presostato se abre en postbarrido.', 'Comprueba la consigna del presostato de aire y ajústala.'),
+        E('28', 'Presión de aire ausente cuando debería estar presente', 'aire', 'Comprueba el arranque del ventilador y la consigna del presostato de aire.'),
+        E('29', 'Contactor del ventilador (FCC) en marcha cuando debería estar parado', 'aire', 'Si el fallo aparece en la fase 70, consulta con el representante; puede hacer falta un apagachispas (filtro RC).'),
+        E('2A', 'Contactor del ventilador (FCC) parado cuando debería estar en marcha', 'aire'),
+        E('2B', 'Presostato de recirculación de gases (FGR-PS) activado cuando no debería', 'aire', 'Comprueba la consigna del presostato.'),
+        E('2C', 'Presostato de recirculación de gases (FGR-PS) desactivado cuando debería estar activo', 'aire', 'Comprueba la consigna del presostato.'),
+        E('2D', 'Válvula sin abrir: indicador de posición cerrada (CPI/POC) activado cuando no debería', 'válvulas', 'Comprueba el cableado de las válvulas de combustible y de los contactos POC.', 'Comprueba que los contactos POC se abren cuando abre la válvula; si no, ajusta el interruptor o cambia la válvula.'),
+        E('2E', 'Válvula o indicador de posición cerrada (CPI/POC) abierto', 'válvulas', 'Comprueba que los contactos están cableados al borne correcto y que la válvula abre en la fase adecuada.'),
+        E('2F', 'Presión de gas por debajo del mínimo', 'gas', 'Comprueba el suministro de gas y el regulador.', 'Comprueba la consigna y el cableado del presostato de mínima de gas.'),
+        E('30', 'Presión de gas por encima del máximo', 'gas', 'Comprueba los reguladores de presión.', 'Comprueba la consigna y el cableado del presostato de máxima de gas.'),
+        E('31', 'Control de estanqueidad: presión entre válvulas (válvula del lado de gas con fuga)', 'válvulas', 'Haz una prueba de burbujas en la válvula para comprobar que no pierde; si pierde, cámbiala.', 'Comprueba que la consigna del presostato de estanqueidad es correcta respecto a la presión de gas.'),
+        E('32', 'Control de estanqueidad: sin presión entre válvulas (válvula del lado del quemador con fuga)', 'válvulas', 'Prueba de burbujas en la válvula del lado del quemador y revisa la consigna del presostato.'),
+        E('33', 'Presión de fuel presente con la bomba parada', 'combustible', 'Configura el tren de fuel para que la presión sea baja con la bomba parada.', 'Comprueba el cableado del interruptor.'),
+        E('34', 'Presión de fuel por debajo del mínimo', 'combustible', 'Asegura que hay presión de fuel con la bomba en marcha y ajusta el regulador.', 'Comprueba cableado y consigna del interruptor.'),
+        E('35', 'Presión de fuel por encima del máximo', 'combustible', 'Asegura que no hay exceso de presión en el circuito y ajusta el regulador.', 'Comprueba el cableado y la consigna del interruptor.'),
+        E('36', 'Sin liberación de arranque para fuel', 'combustible', 'Los interruptores conectados a la liberación de arranque (normalmente el presostato del medio de atomización) no cierran a tiempo.', 'Comprueba consignas y que cierran en el momento correcto según los diagramas de secuencia.'),
+        E('37', 'Sin arranque directo de fuel pesado', 'combustible', 'Los interruptores del borne de arranque directo no cierran a tiempo.'),
+        E('38', 'Programa de falta de gas en curso', 'gas', 'El LMV espera a que suba la presión de gas.'),
+        E('39', 'Error interno de temporizadores', 'interno', 'Si es continuo, cambia el LMV5.'),
+        E('3A', 'Sin identificación de quemador definida', 'parámetros', 'Introduce un número de identificación único para el quemador.'),
+        E('3B', 'Sin contraseña de servicio definida', 'parámetros', 'Introduce una contraseña de servicio válida.'),
+        E('40–42', 'Posición incorrecta de contactos de relé (SR, encendido, BV) o de válvulas', 'interno', '42: diagnóstico como suma de válvulas: 01 SV-fuel, 02 V1-fuel, 04 V2-fuel, 08 V3-fuel, 10 SV-gas, 20 V1-gas, 40 V2-gas, 80 V3-gas.', 'Comprueba el cableado del transformador de encendido, tensiones externas en las entradas y, en la cadena de seguridad, interruptores que oscilen (un limitador que abre y cierra rápido).'),
+        E('43', 'Fallo de coherencia de parámetros', 'parámetros', 'Diag. 01: sin combustible seleccionado. 02: sin tren de combustible definido. 03–05: variables Train, Fuel u operación con controlador sin definir. 06–07: tiempo de prebarrido demasiado corto. 08–0D: tiempos de seguridad o de apagado del encendido demasiado largos.', 'Ajusta los parámetros de tiempo del combustible correspondiente.'),
+        E('44', 'Entrada conectada pero desactivada', 'parámetros', 'Diag. 01 controlador on/off, 02 presostato de aire, 03 FCC/FGR, 04 presión de gas mín., 05 presión de gas máx., 06 presión de fuel mín., 07 presión de fuel máx., 08 arranque fuel, 09 arranque fuel pesado, 0A arranque gas.', 'Desconecta el cable o activa la entrada según el diagnóstico.'),
+        E('45', 'Bloqueo por prueba SLT', 'seguridad', 'Se activó el SLT y hubo parada de seguridad (normalmente por apertura de la cadena de seguridad).'),
+        E('46', 'Parada de programa activa', 'info', 'No es un error: el sistema está detenido en la posición parametrizada. Desactiva la parada de programa si no es necesaria.'),
+        E('47', 'Sin liberación de arranque para gas', 'gas', 'Comprueba la configuración del borne. Desactívalo si no se usa.'),
+        E('48', 'Dos señales de llama con un solo detector', 'llama', 'El sistema está parametrizado para un detector pero llegan dos señales. Comprueba el cableado o configura el LMV52 para dos detectores.'),
+        E('50–53, 58', 'Errores internos', 'interno', 'Si es esporádico, mejora la EMC. Si es continuo, cambia el LMV5.'),
+        E('59–5F', 'Conjunto de parámetros dañado', 'parámetros', 'Haz un reset. Si ocurrió tras cambiar un parámetro, revisa los últimos cambiados.', 'Si no se corrige, vuelve a cargar los parámetros desde el AZL al LMV5. Si sigue, cambia el LMV5.'),
+        E('60–61', 'Error interno de EEPROM', 'interno', 'Haz un reset. Si ocurrió tras cambiar un parámetro, revisa los últimos cambiados. Si no se corrige, recarga los parámetros desde el AZL.')
+      ]
+    },
+    {
+      id: 'lamtec', name: 'LAMTEC BT3xx',
+      how: ['Aplica a BT320, BT330, BT331, BT340 y BT341 (software BT300 v3.3, UI300 v3.5).',
+        'El display muestra el número de error y dos códigos auxiliares D1 y D2. Si vas a consultar con LAMTEC, anota los tres.',
+        'Los errores con número de 999 y los de configuración 107 tienen listas propias en el manual completo.'],
+      src: 'Suplemento de LAMTEC «Códigos de error BT300» (copia en ruso). Las descripciones son traducción mía y solo los errores 1 a 4 llevan lista de comprobaciones. Confirma en el manual oficial ante errores críticos.',
+      codes: [
+        E('0', 'Error desconocido (interno)', 'interno', 'Resetea el error.', 'Si no se borra, envía el código de error y los códigos D1 y D2 a support@lamtec.de y cambia el automatismo.'),
+        E('1', 'Ausencia o pérdida de llama durante el encendido', 'llama', 'Curva en la posición de encendido.', 'Transformador de encendido y piloto.', 'Sensor de llama y su posición.', 'Estabilidad y calidad de la llama.', 'Apertura de las válvulas de combustible.', 'Suministro y presión estable del combustible.', 'Puesta a tierra del sensor de llama.', 'Rotura o cortocircuito de los cables del sensor.', 'Conexión eléctrica y parámetro P800.'),
+        E('2', 'Señal de llama extraña', 'llama', 'Reacción del sensor a luz extraña y sus ajustes.', 'Estado y posición del sensor.', 'Cortocircuito de los cables del sensor y su puesta a tierra.', 'Transformador de encendido y piloto.', 'Parámetro P800, suministro de combustible y conexión eléctrica.'),
+        E('3', 'Ausencia o pérdida de llama durante el encendido', 'llama', 'Las mismas comprobaciones que el error 1, más los parámetros P302, P303 y P800.'),
+        E('4', 'Pérdida de llama durante el funcionamiento', 'llama', 'Curva, sensor de llama y su posición, estabilidad y calidad de la llama.', 'Apertura de válvulas y suministro de combustible con presión estable.', 'Tierra y cables del sensor, conexión eléctrica y parámetro P800.'),
+        E('5', 'Sin señal de llama durante el encendido del piloto', 'llama'),
+        E('6', 'Pérdida de llama en el periodo de estabilización', 'llama'),
+        E('7', 'Pérdida de llama durante el encendido del piloto', 'llama'),
+        E('8', 'Pérdida de llama durante el encendido del quemador principal', 'llama'),
+        E('9', 'Sin señal de llama al final del tiempo de seguridad', 'llama'),
+        E('10', 'La llama desaparece en los 3 s siguientes al tiempo de seguridad', 'llama'),
+        E('11', 'Error interno: falla la comprobación de 5 s', 'interno'),
+        E('13', 'Aparece llama del principal durante el encendido del piloto', 'llama'),
+        E('103', 'Datos dañados', 'interno'),
+        E('106', 'Parámetros distintos entre el procesador principal y el de control', 'parámetros'),
+        E('107', 'Configuración no admitida', 'parámetros'),
+        E('120', 'Modo de trabajo distinto entre procesador principal y de control', 'interno'),
+        E('121', 'Corrección fuera del rango permitido', 'parámetros'),
+        E('141', 'La señal de realimentación de posición cambia demasiado rápido', 'actuador'),
+        E('170', 'Cortocircuito del fotosensor', 'llama'),
+        E('191', 'Canal demasiado tiempo por encima del límite de la 1.ª zona de control', 'actuador'),
+        E('201', 'Canal demasiado tiempo por debajo del límite de la 1.ª zona de control', 'actuador'),
+        E('211', 'Canal demasiado tiempo por encima del límite de la 2.ª zona de control', 'actuador'),
+        E('221', 'Canal demasiado tiempo por debajo del límite de la 2.ª zona de control', 'actuador'),
+        E('241', 'El servomotor no se mueve o no hay señal de realimentación de posición', 'actuador'),
+        E('251', 'El servomotor no llega a la posición indicada', 'actuador'),
+        E('281', 'Señal de realimentación de posición incorrecta en al menos un canal', 'actuador'),
+        E('321', 'Falta la realimentación de posición del servomotor', 'actuador'),
+        E('351', 'Cambio de combustible no permitido con el quemador en marcha', 'parámetros'),
+        E('360', 'Parada por el corrector de O₂ por falta de oxígeno', 'combustión'),
+        E('362', 'Vencido el intervalo de mantenimiento del quemador', 'info'),
+        E('363', 'Valor de O₂ por debajo del límite inferior permitido', 'combustión'),
+        E('372', 'Gran diferencia de potencia entre procesador principal y de control', 'interno'),
+        E('381', 'Gran diferencia de corrección entre procesador principal y de control', 'interno'),
+        E('391', 'La curva no corresponde al combustible elegido', 'parámetros'),
+        E('393', 'Parada forzada del quemador', 'info'),
+        E('394', 'Pérdida de la señal de arranque del quemador desde el BT300', 'comunicación'),
+        E('451', 'No todos los canales están en la posición de encendido', 'actuador'),
+        E('600', 'Superado el tiempo de control de la ejecución del programa', 'interno'),
+        E('601', 'Control de estanqueidad: presión superior a la normal', 'válvulas'),
+        E('602', 'Control de estanqueidad: presión inferior a la normal', 'válvulas'),
+        E('603', 'Purgar a mano el aire de la tubería de gas', 'gas'),
+        E('606', 'Estado incorrecto de la señal CPI/POC', 'válvulas'),
+        E('609', 'Cadena de seguridad del gas abierta', 'seguridad'),
+        E('613', 'Sin señal de presión de aire', 'aire'),
+        E('617', 'Pérdida de llama del piloto permanente en funcionamiento', 'llama'),
+        E('711', 'Cambio de modo de trabajo incorrecto', 'interno'),
+        E('713', 'Combinación de señales incorrecta en modo OFF', 'interno'),
+        E('714', 'Combinación de señales incorrecta en modo espera', 'interno'),
+        E('715', 'Combinación de señales incorrecta en prebarrido', 'interno'),
+        E('716', 'Combinación de señales incorrecta en la posición de encendido', 'interno'),
+        E('717', 'Combinación de señales incorrecta en el encendido', 'interno'),
+        E('730', 'Modo de ajuste del piloto activo', 'info'),
+        E('732', 'Combinación de señales incorrecta en funcionamiento', 'interno'),
+        E('740', 'Control de estanqueidad: presión superior a la normal', 'válvulas'),
+        E('742', 'Control de estanqueidad: presión inferior a la normal', 'válvulas'),
+        E('743', 'Control de llama: hay llama tras apagar el quemador', 'llama'),
+        E('745', 'Superado el tiempo de control de la ejecución del programa', 'interno'),
+        E('759', 'Salida automática del modo de ajuste tras 24 h', 'info'),
+        E('764', 'Error interno del corrector de CO', 'combustión'),
+        E('800', 'Valor de parámetro incorrecto', 'parámetros'),
+        E('802', 'El actuador de recirculación de gases entra tarde en regulación', 'actuador'),
+        E('803', 'Canal demasiado tiempo fuera de la 1.ª zona de control', 'actuador'),
+        E('805', 'Un canal pasa a una posición incorrecta', 'actuador'),
+        E('806', 'Valor de consigna del canal poco fiable', 'actuador'),
+        E('807', 'Agotado el tiempo de espera de respuesta del LSB', 'comunicación'),
+        E('889', 'Reset de error demasiado frecuente', 'info'),
+        E('923', 'Autotest fallido: relé de la válvula de gas 1', 'interno'),
+        E('924', 'Autotest fallido: relé de la válvula de gas 2', 'interno'),
+        E('925', 'Autotest fallido: relé del transformador de encendido', 'interno'),
+        E('928', 'Autotest fallido: relé de la bomba de combustible líquido', 'interno'),
+        E('929', 'Autotest fallido: relé del motor del ventilador', 'interno'),
+        E('985', 'Error de diagnóstico del módulo VSM100', 'variador'),
+        E('986', 'La comprobación dinámica detectó una realimentación incorrecta', 'interno'),
+        E('988', 'Error de relé del módulo DFM300', 'interno'),
+        E('989', 'Error de verosimilitud de la realimentación', 'interno'),
+        E('996', 'Automatismo de combustión bloqueado', 'info'),
+        E('731, 734, 741, 746, 747, 763, 801, 804, 921, 922, 987', 'Error interno', 'interno', 'Resetea. Si se repite, anota el código con D1 y D2 y consulta con LAMTEC.')
+      ]
+    },
+    {
+      id: 'wfm', name: 'Weishaupt W-FM 25 (tapa gris)',
+      how: ['El display muestra el código de avería parpadeando en hexadecimal, por ejemplo «A7h». Desbloquea con [Enter]. No desbloquees más de 2 veces seguidas: tras más de 5 desbloqueos en 15 min sale el 04h.',
+        'Con la avería en pantalla, [+] muestra el 1.er código de detalle y el estado de funcionamiento. [–] y [+] a la vez muestran el 2.º código de detalle. [G] muestra el contador de repeticiones. Los detalles solo importan en 03h, 18h, 41h y 65h.',
+        'La memoria guarda las últimas 9 averías: nivel Service, posiciones 10 a 18.',
+        'Los códigos son de la hoja adicional del W-FM 25 en quemadores de gasóleo WL10 / WL20. En un WG (gas) o con otro W-FM los códigos de llama, aire y presión son parecidos, pero confírmalos en el manual de tu quemador.'],
+      src: 'Weishaupt hoja adicional 83595201 (WL10…-D Z / WL20…-C Z con W-FM25), cap. 7. El W-FM 25 está fabricado por Dungs.',
+      codes: [
+        E('A7h', 'Sin señal de llama tras el tiempo de seguridad', 'llama', 'Revisa las boquillas de gasóleo y cámbialas si hace falta.', 'Ajusta los electrodos de encendido.', 'Revisa el equipo de encendido.', 'Revisa la bobina de la electroválvula y su cable.', 'Revisa el detector de llama y su cable.', 'Revisa la presión de mezcla y redúcela si es alta.', 'Revisa el ajuste del quemador.', 'Si persiste, cambia el W-FM.'),
+        E('A9h', 'Se pierde la llama durante el tiempo de estabilización', 'llama', 'Mismas comprobaciones que A7h.'),
+        E('A8h', 'Se pierde la llama en funcionamiento', 'llama', 'Revisa el ajuste del quemador.', 'Revisa el suministro de gasóleo.', 'Revisa las boquillas y cámbialas si hace falta.', 'Revisa el detector de llama y cámbialo si hace falta.'),
+        E('A6h', 'Llama simulada / luz extraña', 'llama', 'Busca la fuente de luz extraña y elimínala.', 'Revisa el detector de llama.'),
+        E('bAh', 'Llama simulada / luz extraña al arrancar', 'llama', 'Busca la fuente de luz extraña y elimínala.', 'Revisa el detector de llama.'),
+        E('67h', 'Cortocircuito del detector de llama', 'llama', 'Cambia el detector de llama.'),
+        E('A2h', 'Cadena de seguridad abierta', 'seguridad', 'Revisa la cadena de seguridad.'),
+        E('bbh', 'Quemador parado por el contacto X3:7 (puente n.º 7)', 'seguridad'),
+        E('CFh', 'Sin liberación de arranque (X3:14)', 'seguridad', 'Revisa la liberación de arranque.'),
+        E('CEh', 'Falta el puente n.º 15', 'seguridad', 'Pon el puente.'),
+        E('AAh', 'Contacto del presostato de aire no está en reposo', 'aire', 'Revisa influencias de presión de aire (tiro).', 'Revisa el ajuste del presostato.', 'Revisa el presostato y su cable.', 'Si persiste, cambia el W-FM.'),
+        E('Abh', 'El presostato de aire no conmuta', 'aire', 'Revisa el ajuste del presostato.', 'Revisa los tubos del presostato.', 'Revisa el presostato y su cable.', 'Revisa el motor del quemador y su cable.'),
+        E('Cdh', 'El presostato de aire 2 no conmuta', 'aire', 'Revisa el ajuste, los tubos, el presostato y su cable.'),
+        E('CCh', 'El presostato de gasóleo no conmuta', 'combustible', 'Revisa el suministro de gasóleo.', 'Revisa la bomba de gasóleo y cámbiala si hace falta.', 'Revisa el presostato y su cable.', 'Revisa el motor del quemador y su cable.'),
+        E('04h · d2h', 'Más de 5 desbloqueos en 15 min (d2h: por desbloqueo remoto X3:14)', 'seguridad', 'Elimina la causa de la avería.', 'Desbloquea en el panel del quemador: mantén el botón de desbloqueo 5 s hasta que el display parpadee.'),
+        E('0Ch', 'Configuración del quemador incorrecta', 'parámetros', 'Revisa los valores del nivel de parámetros y los parámetros E0 a E4.', 'Si el prebarrido (parámetros 60 + 61) es menor de 5 s, auméntalo. Solo se puede con VisionBox.'),
+        E('4Ah', 'Parámetro E0 en 1 con clavija de codificación puesta', 'parámetros', 'Revisa el parámetro E0.'),
+        E('d1h', 'Conexión con el servomotor defectuosa', 'actuador', 'Corta la alimentación, enchufa bien el conector del W-FM y monta la tapa.', 'Falta la clavija de codificación en la ranura del servomotor: ponla.', 'Parámetro E0 mal configurado: revísalo.'),
+        E('47h', 'Tipo de servomotor de aire no válido', 'actuador', 'Revisa el parámetro 34 (solo con VisionBox).'),
+        E('48h', 'Error de tolerancia del servomotor', 'actuador', 'Comprueba que la compuerta de aire y el reductor giran libres.', 'Cambia el servomotor.'),
+        E('49h', 'El servomotor no llega bien al punto de referencia', 'actuador', 'Comprueba que la compuerta de aire y el reductor giran libres.', 'Cambia el servomotor.'),
+        E('65h', 'Error de tolerancia del servomotor de aire o del variador. Detalle 00 y 04: servomotor o variador; 01 y 05: servomotor; 02 y 06: variador; 07: tiempo agotado', 'actuador', 'Servomotor: comprueba que la compuerta y el reductor giran libres y cámbialo si hace falta.', 'Variador: revisa el variador o el ventilador y cámbialo si hace falta.', 'Detalle 07: durante la normalización de velocidad pulsa [+] antes de 20 s. En modo de ajuste pulsa una tecla antes de 30 min.'),
+        E('40h', 'Normalización de velocidad fuera de límites', 'velocidad', 'Repite la normalización de velocidad.'),
+        E('41h', 'Desviación de velocidad. Detalle 01: dura demasiado; 02: demasiado grande; 03: valor de consigna fuera de tolerancia', 'velocidad', 'Detalle 01: revisa los parámetros 44 y 45.', 'Detalle 02: revisa el sensor de velocidad.', 'Detalle 03: reajusta el quemador y revisa los parámetros 44 y 45.'),
+        E('42h', 'Sensor de velocidad (Namur) no enchufado', 'velocidad', 'Enchufa el sensor de velocidad.'),
+        E('44h', 'Se cambiaron puntos de funcionamiento sin liberación', 'parámetros', 'Reajusta el quemador.', 'Revisa el parámetro E3.', 'Si se cambió el parámetro 46 sin normalizar de nuevo la velocidad, reajusta el quemador.'),
+        E('46h', 'Sentido de giro del motor del quemador incorrecto', 'velocidad', 'Revisa el sentido de giro del motor.'),
+        E('63h', 'Curva de aprendizaje de velocidad defectuosa', 'velocidad', 'Reajusta el quemador.'),
+        E('11h', 'Baja tensión', 'alimentación', 'Revisa la alimentación.'),
+        E('12h', 'La alimentación se interrumpió un momento', 'alimentación', 'Revisa la alimentación.'),
+        E('1dh', 'Interferencias CEM', 'alimentación', 'Mejora las medidas de compatibilidad electromagnética.'),
+        E('d4h', 'Tensión externa en el aviso de funcionamiento X7:B5', 'alimentación', 'Busca y elimina la fuente de tensión externa.', 'Si es interno: corta la alimentación un instante, desbloquea y, si se repite, cambia el W-FM.'),
+        E('16h', 'Fallo de comunicación con la interfaz TWI (VisionBox)', 'comunicación', 'Conecta y desconecta equipos del bus TWI solo sin tensión.', 'Reduce el número de equipos en el bus TWI.', 'Acorta el cable.'),
+        E('18h', 'Parada desde el software del PC. Detalle 2: A1 dirección de bus no válida; A5 configuración de la salida B4; A6 30 min sin pulsar tecla en modo ajuste; A7 función OFF; A8 sin valores de calibración en EEPROM; A9 sin bus; AA fallo con módulo de ampliación; C1 modo de regulación de O2 no permitido; 01 a 1B interno; E1 a E7 EEPROM dañada; EE fallo de comunicación con el W-FM; EF módulo de ampliación no compatible', 'comunicación', 'A1: revisa la dirección de bus.', 'A5: revisa la configuración de la salida B4.', 'A9: revisa la conexión del bus.', 'AA: corta la alimentación un instante y revisa la ranura del módulo analógico o de bus de campo.', 'C1: revisa el modo de regulación de O2.', 'EF: revisa la versión del módulo.', '01 a 1B: interno, corta la alimentación y desbloquea. Si se repite, cambia el W-FM.'),
+        E('03h', 'Detalle 09h: temperatura ambiente demasiado alta. Otros detalles: fallo interno', 'interno', 'Detalle 09h: revisa la temperatura ambiente.', 'Corta la alimentación un instante y desbloquea. Si se repite, cambia el W-FM.'),
+        E('01h, 02h, 05h a 0Bh, 0Eh a 10h, 13h a 15h, 17h, 19h a 1Ch, 1Eh, 43h, 45h, 50h, 56h, 69h a A0h, A4h, A5h, ACh, b0h a b2h, b9h', 'Fallo interno del equipo', 'interno', 'Corta la alimentación un instante y desbloquea.', 'Si se repite, cambia el W-FM.')
+      ]
+    },
+    {
+      id: 'dungs', name: 'DUNGS MPA 41xx',
+      how: ['El LED rojo parpadea tantas veces como indica el código de parpadeo y luego se apaga 4 s. Se repite mientras dure la avería.',
+        'El LED amarillo indica el estado de funcionamiento. En los MPA 4112 y 4122 el display integrado muestra el identificador «F xx».',
+        'Los códigos importantes salen en parpadeos. El resto se muestran con el LED rojo fijo.'],
+      src: 'Manual DUNGS MPA 41xx V2.0 (edición 2023.06, n.º 300 967). No incluye MPA 22, FRI ni otros modelos.',
+      codes: [
+        E('1 · F A2', 'Cadena de seguridad abierta', 'seguridad', 'La cadena de seguridad está abierta o no cerrada.', 'Cables de la cadena de seguridad desconectados.'),
+        E('2 · F 60', 'Cambio de parámetros no liberado', 'parámetros'),
+        E('3 · F A7', 'Sin llama durante el primer tiempo de seguridad', 'llama', 'Electrodo de ionización mal ajustado.', 'Electrodos de encendido mal ajustados.', 'Aislamiento defectuoso de los cables de encendido o de ionización.', 'Las válvulas de gas no abren el paso de gas.', 'Detector de llama (UV…) sin ver luz o defectuoso.', 'Conexiones de red al MPA cambiadas (N y L1).'),
+        E('3 · F BC', 'Sin llama durante el segundo tiempo de seguridad', 'llama'),
+        E('3 · F A9', 'La llama se apaga durante la estabilización', 'llama'),
+        E('4 · F A8', 'La llama se apaga durante el funcionamiento', 'llama', 'Cuerpo de llama defectuoso.', 'Detector de llama (UV…) sin ver luz o defectuoso.'),
+        E('5 · F AA', 'Control de estado de reposo LDW: hay presión de aire en reposo', 'aire', 'Presostato de aire defectuoso.', 'Hay presión de aire en reposo, por ejemplo por viento en el conducto de humos.', 'Umbral del presostato mal ajustado.'),
+        E('5 · F Ab', 'Sin presión de aire', 'aire'),
+        E('6 · F A6', 'Luz extraña', 'llama', 'Derivación a tierra del electrodo de ionización.', 'Escape de gas que se quema, por ejemplo por quemadores vecinos.', 'Tubo UV defectuoso.', 'Detector de llama conectado que ve luz o está defectuoso.'),
+        E('7 · F 18', 'Error de aplicación externa', 'interno'),
+        E('8 · F 16', 'Comunicación TWI y baja tensión', 'alimentación'),
+        E('F Ad', 'Falta de gas (presostato de mínima GDW)', 'gas'),
+        E('F CE', 'Presostato de máxima de gas (GDW) activado', 'gas'),
+        E('F bA', 'Luz extraña más de 1 min tras la petición de calor', 'llama'),
+        E('F E2', 'Luz extraña en el piloto con solo el quemador principal activo', 'llama'),
+        E('F E3', 'Luz extraña en el principal con solo el piloto activo', 'llama'),
+        E('F b3', 'Realimentación de válvula de gas incorrecta', 'válvulas', 'Información adicional: 1 = V1, 2 = V2.'),
+        E('F A4 / F A5', 'Realimentación incorrecta de V1 / V2', 'válvulas'),
+        E('F E4', 'El final de carrera de la válvula V2 no muestra el estado esperado', 'válvulas'),
+        E('F b4 / F b5', 'Fallo de presión de aire en LDW1 / LDW2', 'aire'),
+        E('F E0', 'Sin señal de presión de aire para la refrigeración', 'aire'),
+        E('F AC', 'Realimentación de encendido incorrecta', 'interno'),
+        E('F E1', 'La confirmación de la salida de encendido no muestra el estado esperado', 'interno'),
+        E('F CF', 'Sin liberación de funcionamiento en arranque o marcha', 'seguridad'),
+        E('F dF', 'Sin liberación de arranque en el tiempo previsto', 'seguridad', 'También ocurre si falló el control de reposo o la entrada del hardware no está configurada.'),
+        E('F dd', 'Posición del motor no alcanzada dentro del tiempo máximo del estado', 'actuador'),
+        E('F d4', 'La confirmación de la salida X14 / válvula V2 no muestra el estado esperado', 'válvulas'),
+        E('F bD', 'Detector de llama no conmutado de forma inversa', 'llama'),
+        E('F bF', 'Cadena de seguridad no libre de potencial', 'seguridad')
+      ]
+    }
+  ];
+
+  var cur = B[0], q = '';
+  var chips = $('abrands');
+  B.forEach(function (b) {
+    var el = document.createElement('button');
+    el.type = 'button'; el.className = 'chip'; el.textContent = b.name; el.dataset.id = b.id;
+    el.addEventListener('click', function () { cur = b; save(); draw(); });
+    chips.appendChild(el);
+  });
+
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  function match(e, terms) {
+    if (!terms.length) return 0;
+    var code = norm(e.c), hay = norm(e.c + ' ' + e.t + ' ' + e.g + ' ' + e.d.join(' '));
+    var score = 0;
+    for (var i = 0; i < terms.length; i++) {
+      var t = terms[i];
+      if (hay.indexOf(t) < 0) return -1;
+      if (code === t) score += 100;
+      else if (code.split(/[\s,·→–\/]+/).indexOf(t) > -1) score += 60;
+      else if (code.indexOf(t) > -1) score += 20;
+      else if (norm(e.t).indexOf(t) > -1) score += 10;
+      else score += 1;
+    }
+    return score;
+  }
+
+  function draw() {
+    Array.prototype.forEach.call(chips.children, function (el) { el.setAttribute('aria-pressed', String(el.dataset.id === cur.id)); });
+    var info = '<div class="note"><b>Cómo leer el código</b><ul>' + cur.how.map(function (h) { return '<li>' + esc(h) + '</li>'; }).join('') + '</ul><div class="foot">Fuente: ' + esc(cur.src) + '</div></div>';
+    $('ainfo').innerHTML = info;
+    var terms = norm(q).split(/\s+/).filter(Boolean);
+    var rows = cur.codes.map(function (e, i) { return { e: e, s: match(e, terms), i: i }; }).filter(function (r) { return r.s >= 0; });
+    if (terms.length) rows.sort(function (a, b) { return b.s - a.s || a.i - b.i; });
+    var open = terms.length && rows.length <= 5;
+    if (!rows.length) { $('alist').innerHTML = '<div class="msg">No hay resultados en ' + esc(cur.name) + '. Prueba con el número del código o con una palabra como «llama», «aire» o «gas».</div>'; return; }
+    $('alist').innerHTML = rows.map(function (r) {
+      var e = r.e;
+      var body = e.d.length ? '<ul>' + e.d.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '<p class="foot" style="margin:0">Sin detalle adicional en el documento.</p>';
+      return '<details class="acard"' + (open ? ' open' : '') + '><summary><span class="acode' + (e.c.length > 8 ? ' long' : '') + '">' + esc(e.c) + '</span><span class="atitle">' + esc(e.t) + '</span><span class="atag">' + esc(e.g) + '</span></summary><div class="abody">' + body + '</div></details>';
+    }).join('');
+  }
+
+  $('aq').addEventListener('input', function () { q = $('aq').value; draw(); });
+
+  function save() { try { localStorage.setItem('burnertj-ave', cur.id); } catch (e) {} }
+  try { var s = localStorage.getItem('burnertj-ave'); B.forEach(function (b) { if (b.id === s) cur = b; }); } catch (e) {}
+  draw();
+})();
+</script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  var AZL2_STEPS = [
+    'Con el equipo en pantalla normal, pulsa F y A a la vez durante más de 1 s. Aparece «CodE».',
+    'Suelta los botones. Salen las barras de la clave (%BARS%) y la primera parpadea.',
+    'Con + y − elige la cifra o letra y confirma con /reset. El carácter pasa a un guion y parpadea la barra siguiente.',
+    'Repite hasta el último carácter: 4 para el nivel técnico (HF) y 5 para el nivel OEM.',
+    'Confirma la clave con /reset%EXTRA%. Aparece «PArA» hasta 2 s: ya estás en el nivel de parámetros.'
+  ];
+  function steps(bars, extra) { return AZL2_STEPS.map(function (s) { return s.replace('%BARS%', bars).replace('%EXTRA%', extra); }); }
+
+  var D = [
+    {
+      name: 'LMV 2x / 3x', status: 'ok', statusTxt: 'Pasos verificados en manual',
+      pw: [
+        { n: 'Técnico (HF), 4 caracteres', v: '', from: 'tu dato' },
+        { n: 'OEM, 5 caracteres', v: '', from: 'tu dato' }
+      ],
+      pwNote: 'Técnico = 4 caracteres y OEM = 5, según el manual. Las claves no vienen en la app: pulsa «Mostrar», escríbela una vez y se guarda solo en este móvil.',
+      steps: steps('7 barras', ''),
+      notes: ['Se hace en el AZL2x. Para volver a la pantalla normal: ESC (+ y − a la vez) o /reset más de 3 s.',
+        'Las claves son de 4 y 5 caracteres. Se pueden usar cifras y letras que la pantalla de 7 segmentos sabe dibujar (A, b, C, d, E, F, G, H, L, n, o, P, r, S, t, u…).',
+        'Siemens entrega la unidad con claves de fábrica que el fabricante del quemador debe cambiar. Si no entran, alguien las ha cambiado.'],
+      src: 'Manual base Siemens LMV37.4 CC1P7546en, capítulo 26.1.'
+    },
+    {
+      name: 'LMV 5x', status: 'ok', statusTxt: 'Claves y niveles verificados en manual',
+      pw: [
+        { n: 'Service (HF)', v: '', from: 'manual y tu dato' },
+        { n: 'OEM', v: '', from: 'manual' }
+      ],
+      pwNote: 'En los manuales «HF» es el nivel Service. Las claves no vienen en la app: pulsa «Mostrar», escríbela una vez y se guarda solo en este móvil.',
+      steps: [
+        'Elige el parámetro que quieres cambiar en el AZL5. Los parámetros de usuario (nivel AB) no piden clave.',
+        'Para el nivel Service (HF) u OEM, ve a «Updating» e introduce la clave cuando la pida.',
+        'La sesión caduca sola a los 120 min (parámetro PasswordTime, se puede poner entre 10 y 400 min).',
+        'Para cambiar las claves: Updating > Passwords. Service admite de 3 a 8 caracteres y OEM de 4 a 8.'
+      ],
+      notes: ['El número de identificación del quemador (BurnerID) solo se cambia con la clave OEM.',
+        'Las posiciones especiales de los servomotores piden como mínimo la clave Service.',
+        'El menú exacto del AZL5 varía con la versión de software. Si algo no aparece, dime la versión.'],
+      src: 'Manual de parámetros LMV51/52 (documento 20011354) y manual del software ACS450 CC1J7550en.'
+    },
+    {
+      name: 'LME 7x', status: 'part', statusTxt: 'Pasos verificados, falta la clave',
+      pw: [],
+      pwNote: 'No me has dado las claves del LME 7x. Si son las mismas que las de LMV 2x/3x, dímelo y las añado. El manual dice que el técnico usa 4 caracteres y el OEM 5, y que las de fábrica son confidenciales.',
+      steps: steps('6 barras', ' una segunda vez para terminar'),
+      notes: ['Se hace en el AZL2x, igual que en LMV 2x/3x.',
+        'No cambies un tiempo de seguridad ni un tiempo de prebarrido sin comprobar que sigue cumpliendo la norma del quemador (EN 676, EN 267, EN 1643).'],
+      src: 'Manual base Siemens LME7 CC1P7105en, capítulo 19.8.1.'
+    },
+    {
+      name: 'LME 21 / 22 / 23', status: 'ok', statusTxt: 'Sin nivel de programación',
+      pw: [],
+      steps: [],
+      notes: ['Estas centralitas trabajan con un programa fijo. En la ficha técnica no hay menú de parámetros ni claves.'],
+      src: 'Ficha técnica Siemens CC1N7101.'
+    },
+    {
+      name: 'LAMTEC BT3xx', status: 'pend', statusTxt: 'Pendiente',
+      pw: [],
+      pwNote: 'No he encontrado el procedimiento ni las claves en ningún documento accesible: el capítulo «Enter password» del manual del BT300 está en el PDF completo que no he podido leer. Pásamelo o dime cómo entras tú y lo añado.',
+      steps: [],
+      notes: ['En el manual de LAMTEC hay una sección «Settings menu path» con el camino por el UI300 y un capítulo 5.6.1 «Enter password».'],
+      src: 'Índice del manual LAMTEC BT300 Quick Reference.'
+    },
+    {
+      name: 'Weishaupt W-FM 25 (tapa gris)', status: 'part', statusTxt: 'Pasos verificados, sin clave en el manual',
+      pw: [],
+      pwNote: 'En la hoja adicional del W-FM 25 no aparece ninguna clave para el nivel de parámetros ni para el de acceso. Si tu equipo pide una, dímela y la añado. Es un equipo Dungs, pero no es el MPA 41xx: el acceso es por los botones del propio W-FM.',
+      steps: [
+        'Nivel de información: pulsa [Enter] unos 0,5 s. Muestra datos, horas de funcionamiento y arranques.',
+        'Nivel Service: pulsa [Enter] unos 2 s. Da las posiciones de los servomotores (P0, P1, P2, P3, P9), la memoria de averías, la señal de llama (con QRB4 se recomienda más de 40) y otros datos.',
+        'Nivel de parámetros: pulsa [+] y [Enter] a la vez unos 2 s. Solo funciona con el quemador en espera (OFF). Cambia con [Enter] mantenido más [+] o [–].',
+        'Nivel de acceso (configuración del quemador): pulsa [G] y [L/A] a la vez, luego [+] hasta ver el parámetro E0. Mantén [Enter] y cambia con [+] o [–]; pasa al siguiente con [+].',
+        'Para llegar a E0 a E4, el parámetro «Anzeige Modus» (E) del nivel de parámetros tiene que estar en 1.'
+      ],
+      notes: ['E0: tipo de quemador (0 monocombustible, 1 dual). E1: modo de servicio (solo lectura). E2: detector de llama (0 ionización o KLC, 1 entrada X3:14 con LFS1 / RAR9, 2 QRB4). E3: ventilador (0 off, 1 control, 2 control con vigilancia, 3 regulación de velocidad, 4 según grado de modulación, 5 DAU). E4: retardo del preencendido en segundos.',
+        'Cambiar E0 a E4 mal da averías como 0Ch, 44h o 4Ah. Anota los valores de fábrica antes de tocar.',
+        'La memoria de averías está en el nivel Service, posiciones 10 a 18.'],
+      src: 'Weishaupt hoja adicional 83595201 (WL10 / WL20 con W-FM25), cap. 4.'
+    },
+    {
+      name: 'DUNGS MPA 41xx', status: 'part', statusTxt: 'Pasos verificados, falta la clave',
+      pw: [],
+      pwNote: 'No me has dado las claves del MPA. Están definidas por nivel: Dungs, OEM experto, OEM, Service y Operador.',
+      steps: [
+        'Con la alimentación cortada, pon el interruptor de la cámara de conexiones en «Para». El MPA solo registra el cambio al reiniciarse.',
+        'Conecta la alimentación. Con display (MPA 4112 / 4122), pide un código. Sin display (MPA 4114), los dos LED parpadean alternados y la clave se mete con el software VisionBox en el PC.',
+        'Introduce la clave del nivel Service u OEM. Con niveles altos, el display parpadea 30 s hasta que pulses un botón para confirmar que estás presente.',
+        'Recorre los parámetros: + y − cambian el valor, el botón de desbloqueo guarda, la flecha ← vuelve atrás.',
+        'Al terminar arranca una comprobación automática. El programa se detiene en las pausas H1 a H5 y hay que pulsar un botón en cada una. Los valores solo se aplican al llegar a H5.',
+        'Vuelve a poner el interruptor en «Auto». Si quedan parámetros vigilados cambiados sin liberar, el MPA da el error F 60.'
+      ],
+      notes: ['El nivel de acceso vuelve solo al cabo de 5 h o por corte de tensión. Se recomienda restablecerlo al terminar la configuración.',
+        'Niveles: 1 Dungs, 2 OEM experto, 3 OEM, 4 Service, 5 Operador. El operador no necesita pulsar botón.'],
+      src: 'Manual DUNGS MPA 41xx V2.0 (2023.06, n.º 300 967).'
+    }
+  ];
+
+  var TXT = { ok: 'ok', part: 'warn', pend: 'bad' };
+  function render() {
+    $('plist').innerHTML = D.map(function (c, ci) {
+      var pw = c.pw.length ? '<div class="pwbox">' + c.pw.map(function (p, pi) {
+        return '<div class="pwrow"><div><div class="label">' + esc(p.n) + '</div><div class="unit">' + esc(p.from) + '</div></div>' +
+          '<span class="pwval" id="pv' + ci + '_' + pi + '" data-v="' + esc(p.v) + '" aria-live="polite">••••</span>' +
+          '<button type="button" class="chip pwbtn" data-c="' + ci + '" data-p="' + pi + '" aria-pressed="false">Mostrar</button></div>';
+      }).join('') + '</div>' : '';
+      var note = c.pwNote ? '<p class="foot" style="margin:0">' + esc(c.pwNote) + '</p>' : '';
+      var st = c.steps.length ? '<div><div class="label" style="margin-bottom:6px">Pasos</div><ol class="steps">' + c.steps.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol></div>' : '';
+      var nt = c.notes.length ? '<ul class="pnotes">' + c.notes.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('') + '</ul>' : '';
+      return '<details class="acard"' + (ci === 0 ? ' open' : '') + '><summary class="psum"><span class="atitle" style="font-size:18px">' + esc(c.name) + '</span><span class="dev ' + TXT[c.status] + '">' + esc(c.statusTxt) + '</span></summary>' +
+        '<div class="abody pbody">' + pw + note + st + nt + '<div class="foot">Fuente: ' + esc(c.src) + '</div></div></details>';
+    }).join('');
+  }
+  render();
+
+  $('plist').addEventListener('click', function (e) {
+    var b = e.target.closest('.pwbtn'); if (!b) return;
+    var el = $('pv' + b.dataset.c + '_' + b.dataset.p);
+    var on = b.getAttribute('aria-pressed') !== 'true';
+    var key = 'bj_pw_' + b.dataset.c + '_' + b.dataset.p, val = '';
+    try { val = localStorage.getItem(key) || ''; } catch (x) {}
+    if (on && !val) {
+      val = window.prompt('Escribe esta clave. Se guarda solo en este móvil:') || '';
+      if (val) { try { localStorage.setItem(key, val); } catch (x) {} }
+    }
+    if (on && !val) return;
+    el.textContent = on ? val : '••••';
+    b.setAttribute('aria-pressed', String(on));
+    b.textContent = on ? 'Ocultar' : 'Mostrar';
+  });
+})();
+</script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  var D = [
+    {
+      name: 'LMV 5x', status: 'ok', statusTxt: 'Verificado en manual',
+      need: 'Hace falta la clave Service (HF) u OEM. Está en la pestaña Acceso.',
+      blocks: [
+        {
+          h: 'Entrar y ver los puntos', kind: 'ol', items: [
+            'En el AZL5 ve a Params & Display > Ratio Control > Gas Settings > CurveParams. En fuel el camino acaba en CurveParams > Curve Settings.',
+            'Pulsa Enter sobre «Point» y elige el punto con las flechas. Los puntos sin definir muestran XXXX.',
+            'Pulsa Enter sobre el punto: el AZL5 pregunta si quieres cambiarlo o borrarlo. Para solo mirar, sal con Esc sin cambiar nada.'
+          ]
+        },
+        {
+          h: 'Medir con analizador en una revisión', kind: 'ol', items: [
+            'Pon el LMV5 en carga manual: Manual Operation > Auto / Manual / Off en «Burner ON», y fija la carga en Manual Operation > SetLoad.',
+            'Entra en el punto que quieres comprobar, elige cambiar y después «followed» (seguido). Los servomotores se mueven en tiempo real y ves el efecto en el analizador. Un «>» indica que el servomotor se está moviendo y un «:» que ha llegado.',
+            'Si ajustas, cambia el valor con las flechas. Con Esc vuelves a la izquierda y con otro Esc pregunta si guardas (Enter) o cancelas (Esc). Al guardar, una barra gira unos segundos.',
+            'Al terminar, vuelve el modo manual a Auto.'
+          ]
+        },
+        {
+          h: 'Datos de la curva', kind: 'ul', items: [
+            'Hasta 15 puntos por curva, de bajo a alto fuego, unidos con líneas rectas.',
+            'El punto 1 es el bajo fuego. Por defecto toma la posición de encendido, y se puede cambiar sin tocar el encendido.',
+            'La carga (Load) es la potencia del quemador en %. Se fija con un contador de combustible o, si no hay, con la presión en cabeza de quemador. En un quemador 10:1, el punto 1 va al 10 % y el último al 100 %.',
+            'Pendiente máxima de un servomotor: 3,6° por 0,1 % de carga con rampa de 30 s, 1,8° con 60 s y 0,9° con 120 s. Si se supera, da el error 1A.'
+          ]
+        },
+        {
+          h: 'Precauciones', kind: 'ul', items: [
+            'Mientras ajustas, tú eres el único responsable de la combustión segura: controlas los servomotores directamente.',
+            'Si mantienes una flecha pulsada, la posición cambia cada vez más rápido.',
+            'Si cambias el sentido de giro de un servomotor, hay que borrar todas las curvas de gas y fuel.',
+            'Comprueba el giro de todos los servomotores, también el de fuel, antes de dar por buenas las curvas de gas.',
+            'Si dejas activo el programa de parada y hay una curva definida, el LMV modulará al soltarlo. Mantén la carga manual.'
+          ]
+        }
+      ],
+      src: 'Manual de parámetros LMV51/52 (documento 20011354), curvas de combustión.'
+    },
+    {
+      name: 'LMV 2x / 3x', status: 'ok', statusTxt: 'Verificado en manual',
+      need: 'Hace falta la clave del técnico (HF). Está en la pestaña Acceso.',
+      blocks: [
+        {
+          h: 'Entrar y ver los puntos', kind: 'ol', items: [
+            'Entra al nivel de parámetros con F+A y la clave.',
+            'Con /reset ve al parámetro 400 (ajustes del control aire-combustible).',
+            'El siguiente, el 201, es el modo de funcionamiento. No lo cambies: si lo modificas o lo dejas en «--», se borran las curvas.',
+            'Sigue con /reset por los parámetros siguientes hasta que aparezca P0 parpadeando: es el punto de encendido.',
+            'Avanza de punto con /reset hasta P9 (alto fuego).'
+          ]
+        },
+        {
+          h: 'Cambiar un punto', kind: 'ol', items: [
+            'En el punto elegido, mantén F pulsado.',
+            'Pulsa a la vez F y las flechas para mover la posición del servomotor o el valor del variador. Ejemplo del manual: 30,0 para la posición de encendido P0.',
+            'Suelta y avanza al siguiente punto. Después de P9 aparece «run».',
+            'Pulsa /reset para el ajuste en caliente (con quemador en marcha) o ESC para el ajuste en frío. El ajuste arranca cuando hay petición de calor.'
+          ]
+        },
+        {
+          h: 'Datos de la curva', kind: 'ul', items: [
+            'La curva tiene 10 puntos (P0 a P9). Entre ellos, las posiciones se interpolan en línea recta.',
+            'P0 es la carga de encendido y P9 el alto fuego.',
+            'Los modos multietapa («Lo 2-stage» y «Lo 3-stage») usan otro procedimiento, con curvas por etapa.'
+          ]
+        },
+        {
+          h: 'Precauciones', kind: 'ul', items: [
+            'Si durante el ajuste hay una parada de seguridad por un error, el ajuste de la curva se abandona.',
+            'El manual no describe un modo de solo lectura. Si solo consultas, no pulses F con las flechas y sal con ESC (+ y − a la vez), que no adopta ningún valor.'
+          ]
+        }
+      ],
+      src: 'Manual base Siemens LMV37.4 CC1P7546en, capítulo 26.11.'
+    },
+    {
+      name: 'LAMTEC BT3xx', status: 'pend', statusTxt: 'Pendiente',
+      need: '',
+      blocks: [
+        {
+          h: 'Lo que sé', kind: 'ul', items: [
+            'El BT340 guarda 2 juegos de curvas (fuel y gas, conmutables). El BT320 y el BT330 guardan 1.',
+            'Las curvas se configuran desde el menú del UI300.',
+            'No tengo los pasos del menú ni las claves. Pásame el manual del BT300 o dime cómo entras y lo completo.'
+          ]
+        }
+      ],
+      src: 'Hoja técnica LAMTEC BT300 / BT320 / BT340.'
+    },
+    {
+      name: 'Weishaupt W-FM 25 (tapa gris)', status: 'part', statusTxt: 'Verificado en gasóleo WL10 / WL20',
+      need: 'El ajuste de puntos se hace en el nivel de acceso del W-FM. No aparece ninguna clave en el manual.',
+      blocks: [
+        {
+          h: 'Ver las posiciones de los puntos (sin tocar)', kind: 'ol', items: [
+            'Pulsa [Enter] unos 2 s para entrar en el nivel Service.',
+            'Con [+] recorre los datos: aparecen las posiciones de los servomotores en P0, P1, P2, P3 y P9, la señal de llama y la memoria de averías.'
+          ]
+        },
+        {
+          h: 'Reajustar los puntos (quemador de 2 etapas sin regulación de velocidad)', kind: 'ol', items: [
+            'Desenchufa el puente n.º 7 del W-FM y da tensión. El W-FM queda en espera.',
+            'Pulsa [G] y [L/A] a la vez (nivel de acceso) y después [+]: entras en el nivel de ajuste de puntos.',
+            'Con [+] avanzas: P9 (etapa 2), P1 (etapa 1), P0 (encendido, mismo valor que P1), P2 (apagado de etapa 2, 3 a 8° por encima de P1) y P3 (mismo valor que P2).',
+            'En cada punto, mantén [L/A] y cambia el ángulo con [–] o [+].',
+            'Enchufa el puente n.º 7. El quemador arranca y se para en P0. Con [+] pasa a P1 y luego a P9.',
+            'Ajusta la presión de la bomba y mide la combustión en cada punto con el analizador, corrigiendo la compuerta de aire con [L/A] y [–] / [+].'
+          ]
+        },
+        {
+          h: 'Precauciones', kind: 'ul', items: [
+            'Si en el ajuste salta una parada de regulación o una avería, pulsa [G] y [L/A] a la vez brevemente y luego [+] para volver al nivel de ajuste.',
+            'Un cambio de puntos sin liberación da el error 44h.',
+            'Con regulación de velocidad (E3 = 3) el procedimiento es distinto y necesita normalizar la velocidad. No lo tengo detallado.',
+            'Este procedimiento es del gasóleo WL10 / WL20. En gas modulante (WG) los pasos y las curvas son otros. Dime tu modelo y lo completo con su manual.'
+          ]
+        }
+      ],
+      src: 'Weishaupt hoja adicional 83595201 (WL10 / WL20 con W-FM25), cap. 5.2.1.'
+    },
+    {
+      name: 'LME 7x · DUNGS MPA 41xx', status: 'ok', statusTxt: 'Sin curva de combustión',
+      need: '',
+      blocks: [
+        {
+          h: 'No aplica', kind: 'ul', items: [
+            'Los manuales del LME 7x y del DUNGS MPA 41xx no mencionan curvas de combustión.',
+            'Si en algún modelo tuyo sí existe, dímelo con la referencia y lo reviso.'
+          ]
+        }
+      ],
+      src: 'Manuales Siemens LME7 CC1P7105en y DUNGS MPA 41xx (2023.06).'
+    }
+  ];
+
+  var CLS = { ok: 'ok', part: 'warn', pend: 'bad' };
+  $('clist').innerHTML = D.map(function (c, ci) {
+    var need = c.need ? '<p class="foot" style="margin:0">' + esc(c.need) + '</p>' : '';
+    var blocks = c.blocks.map(function (b) {
+      var tag = b.kind === 'ol' ? 'ol' : 'ul';
+      var cls = b.kind === 'ol' ? 'steps' : 'pnotes plain';
+      return '<div><div class="label" style="margin-bottom:6px">' + esc(b.h) + '</div><' + tag + ' class="' + cls + '">' + b.items.map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('') + '</' + tag + '></div>';
+    }).join('');
+    return '<details class="acard"' + (ci === 0 ? ' open' : '') + '><summary class="psum"><span class="atitle" style="font-size:18px">' + esc(c.name) + '</span><span class="dev ' + CLS[c.status] + '">' + esc(c.statusTxt) + '</span></summary>' +
+      '<div class="abody pbody">' + need + blocks + '<div class="foot">Fuente: ' + esc(c.src) + '</div></div></details>';
+  }).join('');
+})();
+</script>
+
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
+</body></html>
