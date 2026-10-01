@@ -140,6 +140,7 @@ nav ul.scroll button { font-size: 16px; padding-inline: 14px; white-space: nowra
 .esqt th { position: static; text-align: left; vertical-align: top; white-space: nowrap; width: 1%; padding: 9px 10px; background: var(--surface-2); color: var(--ink); font-family: var(--f-data); font-size: 14px; text-transform: none; letter-spacing: 0; }
 .esqt td { text-align: left; vertical-align: top; padding: 9px 10px; line-height: 1.4; }
 .esqt tr:last-child th, .esqt tr:last-child td { border-bottom: 0; }
+.esqfig { margin: 0 0 12px; } .esqfig a { display: block; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 4px; } .esqfig img { display: block; width: 100%; height: auto; } .esqfig figcaption { font-size: 13px; color: var(--ink-soft); margin-top: 4px; }
 .esqn { font-size: 13px; color: var(--ink-soft); margin-top: 3px; }
 </style>
 
@@ -965,6 +966,22 @@ P_PCS = Qn · PCS        (base de facturación)</div>
       ]
     },
     {
+      id: 'riello', name: 'Riello Gulliver (RG)',
+      how: ['Caja de control de los Riello Gulliver (gasóleo): el LED rojo está dentro del pulsador de reset. Con el LED rojo fijo (bloqueo) mantén el pulsador más de 3 s: el LED amarillo parpadea para confirmar y, al soltar, el LED rojo da una serie de destellos. Cuenta cuántos y busca el número en la tabla.',
+        'Tiempos distintos según versión: en los RG de 1 etapa (manual 2903260/2903281) hay que mantener 3 s y la serie se repite cada 2 s. En los de 2 etapas (RL 130, 20057368) hay que esperar al menos 10 s tras el bloqueo, mantener más de 3 s y la serie se repite cada 3 s.',
+        'Para solo desbloquear sin ver el código: pulsa de 1 a 3 s (en 2 etapas el quemador rearranca tras 2 s). Si no arranca, comprueba que el termostato límite está cerrado. Tras ver el diagnóstico, desbloquea con el pulsador.',
+        'En los de 2 etapas, otra pulsación larga desde el diagnóstico (soltar 1 s y volver a pulsar más de 3 s hasta el amarillo) abre el enlace óptico con PC: horas de funcionamiento, número y tipo de bloqueos.'],
+      src: 'Manuales Riello Gulliver: 2903260 y 2903281 (1 etapa, destellos 2/4/7/8) y RL 130 20057368 (2 etapas, 2/4/7/10). La caja exacta no se nombra en los manuales: confirma tu modelo en la placa.',
+      codes: [
+        E('Sin destellos', 'El quemador no arranca', 'seguridad', 'Sin alimentación eléctrica: cierra interruptores y revisa fusibles.', 'Termostato límite (TL) o de seguridad (TS) abierto.', 'Falta o está desconectado el puente «P» del enchufe de 7 polos (1 etapa).', 'Conexiones de la caja mal insertadas.', 'Bomba bloqueada, motor eléctrico defectuoso, conexiones erróneas o caja defectuosa.'),
+        E('2 destellos', 'Sin llama al terminar el tiempo de seguridad', 'llama', 'Sin combustible en el depósito o agua en el fondo.', 'Válvulas del gasóleo no abren o sucias; bobina defectuosa.', 'Boquilla (1.ª etapa) obstruida, sucia o deformada.', 'Electrodos sucios o mal ajustados, o a masa por aislante roto.', 'Cable de alta tensión defectuoso o a masa; transformador de encendido defectuoso.', 'Bomba sin cebar, acoplamiento bomba-motor roto, aspiración conectada a retorno, válvulas cerradas o filtros sucios.', 'Fotocélula (detector de llama) sucia o defectuosa, o caja defectuosa.', 'Cabezal y compuerta de aire mal ajustados.', 'Térmico del motor disparado, falta una fase o giro del motor invertido (2 etapas).'),
+        E('4 destellos', 'Luz extraña o llama simulada', 'llama', 'Luz extraña antes del arranque, durante el prebarrido o el postbarrido (en 1 etapa, también antes o después de que conmute el termostato límite).', 'Fotocélula en cortocircuito.', 'Si no hay luz: cambia la fotocélula o la caja.'),
+        E('7 destellos', 'Pérdida de llama en funcionamiento', 'llama', 'Mala regulación del quemador: cabezal, compuerta de aire, electrodos, presión de bomba (10–14 bar).', 'Boquilla sucia, deformada, defectuosa o mal dimensionada (1.ª etapa demasiado grande o pequeña).', 'Válvula de gasóleo defectuosa o sucia.', 'Fotocélula defectuosa o sucia.', 'En 2 etapas: no pasa a 2.ª etapa si TR no cierra, hay bobina de la 2.ª defectuosa o émbolo atascado; el quemador se para en la transición por boquilla o fotocélula sucia o exceso de aire.'),
+        E('8 destellos', 'Control del calentador de gasóleo (solo 1 etapa con calentador)', 'seguridad', 'Comprueba la posición correcta del puente «P».'),
+        E('10 destellos', 'Fallo interno o interferencia (2 etapas)', 'interno', 'Fallo de conexión o interno de la caja.', 'Perturbación electromagnética: instala el kit de protección contra radioperturbaciones.', 'Si se repite, cambia la caja.')
+      ]
+    },
+    {
       id: 'dungs', name: 'DUNGS MPA 41xx',
       how: ['El LED rojo parpadea tantas veces como indica el código de parpadeo y luego se apaga 4 s. Se repite mientras dure la avería.',
         'El LED amarillo indica el estado de funcionamiento. En los MPA 4112 y 4122 el display integrado muestra el identificador «F xx».',
@@ -1396,6 +1413,7 @@ P_PCS = Qn · PCS        (base de facturación)</div>
 })();
 </script>
 <script>
+
 var ESQ_LME2 = {
   id:'lme2', name:'LME 21 / 22 / 23',
   intro:'Esquema de conexionado de las centralitas Siemens LME21, LME22 y LME23 (quemadores de 2 etapas) sobre base enchufable: bornes 1 a 12 con su función según el diagrama interno del fabricante.',
@@ -1941,8 +1959,9 @@ var ESQ_WFM = {id:'wfm', name:'Weishaupt W-FM 25 (tapa gris)', intro:'Conexionad
         }).join('') + '</tbody></table></div></div>';
     });
     if (!shown) html = '<div class="msg">No hay bornes que coincidan con «' + esc(q) + '».</div>';
+    var imgs = (!t.length && typeof ESQ_IMG !== 'undefined' && ESQ_IMG[cur.id]) ? '<div><div class="label" style="margin-bottom:6px">Dibujo del fabricante</div>' + ESQ_IMG[cur.id].map(function (x) { return '<figure class="esqfig"><a href="' + esc(x.f) + '" target="_blank" rel="noopener"><img src="' + esc(x.f) + '" alt="' + esc(x.cap) + '" loading="lazy"></a><figcaption>' + esc(x.cap).replace(/\.?$/, '. ') + 'Toca para ampliar.</figcaption></figure>'; }).join('') + '</div>' : '';
     var notes = (!t.length && cur.notes && cur.notes.length) ? '<div><div class="label" style="margin-bottom:6px">Avisos y datos que no he podido verificar</div><ul class="pnotes plain">' + cur.notes.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('') + '</ul></div>' : '';
-    $('elist').innerHTML = '<p class="foot" style="margin:0">' + esc(cur.intro) + '</p>' + html + notes + '<div class="foot">Fuente: ' + esc(cur.src) + '</div>';
+    $('elist').innerHTML = '<p class="foot" style="margin:0">' + esc(cur.intro) + '</p>' + imgs + html + notes + '<div class="foot">Fuente: ' + esc(cur.src) + '</div>';
   }
   $('eq').addEventListener('input', function (e) { q = e.target.value; draw(); });
   draw();
