@@ -136,6 +136,11 @@ nav ul.scroll { display: flex; overflow-x: auto; gap: 6px; scrollbar-width: none
 nav ul.scroll::-webkit-scrollbar { display: none; }
 nav ul.scroll li { flex: 0 0 auto; }
 nav ul.scroll button { font-size: 16px; padding-inline: 14px; white-space: nowrap; }
+.esqt { min-width: 0; font-family: var(--f-body, inherit); font-size: 15px; }
+.esqt th { position: static; text-align: left; vertical-align: top; white-space: nowrap; width: 1%; padding: 9px 10px; background: var(--surface-2); color: var(--ink); font-family: var(--f-data); font-size: 14px; text-transform: none; letter-spacing: 0; }
+.esqt td { text-align: left; vertical-align: top; padding: 9px 10px; line-height: 1.4; }
+.esqt tr:last-child th, .esqt tr:last-child td { border-bottom: 0; }
+.esqn { font-size: 13px; color: var(--ink-soft); margin-top: 3px; }
 </style>
 
 <div class="wrap">
@@ -328,6 +333,20 @@ P_PCS = Qn · PCS        (base de facturación)</div>
     <div class="msg">La curva regula la combustión en todo el rango de potencia. Cualquier cambio se comprueba con analizador en cada punto, y se anota el valor antes y después.</div>
     <div id="clist" class="alist"></div>
   </div>
+
+
+<div class="tab" id="tab-esq" hidden>
+    <div>
+      <h2>Esquemas eléctricos</h2>
+      <p class="lead">Bornes y conectores de cada centralita, con su función y los límites de corriente. Busca por borne o por palabra.</p>
+    </div>
+    <div class="msg">Es una tabla hecha a partir del manual del fabricante, no el plano del quemador. Antes de tocar un cableado, contrasta con el esquema que lleva tu quemador, porque la asignación depende del modelo exacto.</div>
+    <section class="panel" aria-label="Esquemas">
+      <div class="field"><span class="label">Centralita</span><div class="brands" id="ebrands" role="group" aria-label="Centralita"></div></div>
+      <div class="field"><label class="label" for="eq">Borne o palabra</label><input class="small-in" id="eq" type="search" inputmode="search" autocomplete="off" placeholder="p. ej. 12, válvula, llama"></div>
+    </section>
+    <div id="elist" class="alist"></div>
+  </div>
 </div>
 
 <nav aria-label="Secciones">
@@ -337,6 +356,7 @@ P_PCS = Qn · PCS        (base de facturación)</div>
     <li><button type="button" data-tab="ave">Averías</button></li>
     <li><button type="button" data-tab="prog">Acceso</button></li>
     <li><button type="button" data-tab="curva">Curva</button></li>
+    <li><button type="button" data-tab="esq">Esquemas</button></li>
   </ul>
 </nav>
 
@@ -580,7 +600,7 @@ P_PCS = Qn · PCS        (base de facturación)</div>
   hint();
 
   // navegación entre secciones
-  var tabs = { pulv: $('tab-pulv'), pot: $('tab-pot'), ave: $('tab-ave'), prog: $('tab-prog'), curva: $('tab-curva') };
+  var tabs = { pulv: $('tab-pulv'), pot: $('tab-pot'), ave: $('tab-ave'), prog: $('tab-prog'), curva: $('tab-curva'), esq: $('tab-esq') };
   function show(name) {
     Object.keys(tabs).forEach(function (k) { tabs[k].hidden = k !== name; });
     Array.prototype.forEach.call(document.querySelectorAll('nav button[data-tab]'), function (b) {
@@ -1374,6 +1394,560 @@ P_PCS = Qn · PCS        (base de facturación)</div>
       '<div class="abody pbody">' + need + blocks + '<div class="foot">Fuente: ' + esc(c.src) + '</div></div></details>';
   }).join('');
 })();
+</script>
+<script>
+var ESQ_LME2 = {
+  id:'lme2', name:'LME 21 / 22 / 23',
+  intro:'Esquema de conexionado de las centralitas Siemens LME21, LME22 y LME23 (quemadores de 2 etapas) sobre base enchufable: bornes 1 a 12 con su función según el diagrama interno del fabricante.',
+  groups:[
+    {h:'Alimentación y seguridad', rows:[
+      ['12','Entrada de fase tras termostato/presostato de regulación (R/W), limitador de seguridad (STB/SB) y presostato de gas (GP)','Corriente de entrada máxima 5 A. En el diagrama la fase pasa por fusible externo Si y la cadena R/W - GP - STB antes de llegar al borne 12'],
+      ['2','Neutro (N)','Por seguridad llevar el neutro al borne 2; la union con el neutro viene precableada en la base. Fan, transformador de encendido y válvulas al distribuidor de neutro'],
+      ['PE','Tierra del quemador','Poner a tierra el quemador según normativa; no basta con la tierra de la caldera']
+    ]},
+    {h:'Motor y encendido', rows:[
+      ['3','Motor del ventilador (M)','Máximo 3 A con cos=1 / 2,7 A con cos 0,6; admite 15 A durante máx. 0,5 s (solo LME2...). Quemador sin ventilador: conectar AGK25 al borne 3'],
+      ['7','Transformador de encendido (Z)','Máximo 2 A con cos=1 / 1,7 A con cos 0,6']
+    ]},
+    {h:'Válvulas de combustible', rows:[
+      ['4','Válvula de combustible 1 (V1)','Máximo 2 A con cos=1 / 1,7 A con cos 0,6'],
+      ['5','Válvula de combustible 2 (V2), o regulador de carga (LR)','Máximo 2 A con cos=1 / 1,7 A con cos 0,6. En quemadores 2 etapas modulantes con registro de regulación de gas no se necesita V2'],
+      ['9','LME22/23: actuador de aire SA (SQN...) en alta/baja; LME21: sin salida en el diagrama','Carga máxima admisible: el manual indica "terminales 4, 5, 7 y 9 (11)" máx. 2 A cos=1 / 1,7 A cos 0,6']
+    ]},
+    {h:'Presostato de aire y detección de llama', rows:[
+      ['6','Presostato de aire LP (entrada de señal de aire)','Los bornes 3, 6 y 11 forman el circuito del presostato de aire: revisar que las líneas no estén en cortocircuito'],
+      ['11','Presostato de aire LP (entrada, comun con el 6 en el diagrama)','En el diagrama el LP conecta los bornes 3, 6 y 11. Ver notas para el caso sin presostato'],
+      ['1','Entrada de señal de llama: sonda de ionización (ION) o QRA... con AGQ3...A27','Cable máx. 1 m a 100 pF/m (3 m a 15 pF/m); cable separado. Umbral llama ON 1,5 uA CC, OFF 0,5 uA CC, corriente necesaria 3 uA CC'],
+      ['12 / 2 / 1','Solo LME23: detector de llama azul QRC (br=marron a 12, bl=azul a 2, sw=negro a 1)','Corriente mínima con llama 70 uA, máx. sin llama 5,5 uA']
+    ]},
+    {h:'Alarma y rearme', rows:[
+      ['10','Salida de alarma / aviso de avería (AL)','Máximo 1 A. Cable máx. 20 m a 100 pF/m (tender aparte). 10 parpadeos del led: alarma en borne 10 OFF'],
+      ['8','Pulsador de rearme remoto (EK2)','Cable máx. 20 m a 100 pF/m (tender aparte). El rearme interno es el boton de la centralita (pulsar ~1 s, menos de 3 s)']
+    ]}
+  ],
+  notes:[
+    'Diferencias de modelo: LME21 sin control de actuador (bornes 1 a 8, 10, 11, 12; relés K1 a K4). LME22 añade control de actuador de aire SA en borne 9 (relé K5, tiempos de apertura t11 y cierre t12 de 12 s, 16,5 s o 30 s según modelo). LME23 igual que LME22 pero con detector de llama azul QRC (solo AC 230 V).',
+    'Tensiones: AC 230 V +10%/-15% (versiones C2, finales .xxxC2) y AC 120 V +10%/-15% (LME21.130C1, 21.330C1, 21.350C1, 22.331C1). Frecuencia 50...60 Hz +-6%. Consumo 12 VA.',
+    'Fusible primario externo (Si): máximo 10 A lento.',
+    'Para QRA... con AGQ3...A27: solo en versiones AC 230 V (LMExx.xxxx2); el AGQ3...A27 es obligatorio. Cable QRA a AGQ3 máx. 20 m, AGQ3 a centralita máx. 2 m.',
+    'Cargas máximas por borne (cos 0,6 / cos=1): borne 3 = 2,7 A / 3 A; bornes 4, 5, 7 y 9 (11) = 1,7 A / 2 A; borne 10 = 1 A / 1 A. Entrada borne 12 = máx. 5 A. Longitud de cable en otros bornes: máx. 3 m a 100 pF/m.',
+    'Red con neutro sin poner a tierra y supervisión por ionización: conectar el borne 2 a tierra mediante unidad RC (ARC 4 668 9066 0).',
+    'No aplicar tensión externa a las salidas de control. Cables de alta tensión de encendido separados de la centralita y del resto de cables.',
+    'Quemadores sin presostato de aire: el manual muestra el puente con AGK25 entre los bornes 3 y 11 (marca de diferencia respecto a LGB).',
+    'Valores de tiempo (tw, t1, t3, t3n, t4, TSA, t10) varian según modelo exacto: consultar la tabla "Type summary" del manual para cada referencia.',
+    'No verificado: función exacta del borne 9 en el LME21 (el diagrama no le asigna salida). No verificado: la distinción exacta de contacto de reposo/trabajo del presostato entre bornes 6 y 11. No verificado: corriente máxima de la salida de actuador SA (borne 9) distinta de la tabla general.'
+  ],
+  src:'Siemens CC1N7101 (LME2x, 14.11.2011), páginas 2-3 (notas), 9-11 (datos técnicos), 16 (códigos de error), 18-21 (diagramas de conexión y ejemplos)'
+};
+var ESQ_LME7 = {id:'lme7', name:'LME 7x', intro:'Centralitas Siemens LME71 / LME72 / LME73 (A1 = AC 120 V, A2 = AC 230 V, 50/60 Hz). Los bornes se designan Xnn-nn/pin; el código de 5 cifras de cada conector (p. ej. 05K30) es la codificación mecánica del conector (marcado de enchufe). Los esquemas son los del diagrama interno de conexión de cada manual; el pin 1 es el de menor número impreso en el diagrama.', groups:[
+{h:'Alimentación y bucle de seguridad - X3-04 (cód. 05K30)', rows:[
+['X3-04/5','L fase de red (entrada)','Fusible primario externo máx. 6,3 A lento. Red máx. 100 m'],
+['X3-04/4','N neutro (entrada)','No confundir fase y neutro'],
+['X3-04/3','PE tierra de protección',''],
+['X3-04/2','Salida L alimentación del bucle de seguridad (limitador, falta de agua, etc.)','Carga total del bucle (SL + SV X6-03/3 + POC X2-02/3) máx. 2 A, cos phi >0,4'],
+['X3-04/1','Entrada realimentación del bucle de seguridad','Corriente de entrada de la unidad en X3-04 (suma de contactor ventilador, transformador de encendido y válvulas) máx. 5 A']]},
+{h:'Alarma y reset remoto - X2-03 (cód. 03K15)', rows:[
+['X2-03/3','L salida de alarma','Máx. 1 A, cos phi >0,6'],
+['X2-03/2','N alarma',''],
+['X2-03/1','Entrada EK2: reset remoto de bloqueo','Cable de reset separado, máx. 30 m']]},
+{h:'Termostato / regulador de carga - X5-03 (cód. 04K01)', rows:[
+['X5-03/4','L salida alimentación del regulador de carga (LR)',''],
+['X5-03/3','Entrada regulador de carga ABRIR (LR-OPEN)','LME71.401 (pág. 36): activa; LME71.402 (pág. 42): no activa. Puente Dbr5 entre X5-03/3 y /4 para 2 etapas sin LR-OPEN, solo dibujado en PME71.401'],
+['X5-03/2','Entrada regulador de carga CERRAR (LR-CLOSED)','LME71: no activa. LME72/LME73: LR-CLOSED activa (dibujada en págs. 50, 57, 67, 80, 92, 105)'],
+['X5-03/1','Entrada On/Off: termostato o presostato (R)','Regulador de carga máx. 30 m']]},
+{h:'Presostatos (aire, gas mínimo, estanqueidad) - X3-02, X5-01, X9-04', rows:[
+['X3-02/2','Salida L alimentación presostato de aire (LP)','Cód. 02K02'],
+['X3-02/1','Entrada realimentación presostato de aire (LP)','Revisar cortocircuitos en la línea del presostato de aire'],
+['X5-01/3','Salida L alimentación presostato de gas mínimo (Pmin)','Cód. 03K54'],
+['X5-01/2','Entrada realimentación presostato gas mínimo (Pmin)',''],
+['X5-01/1','PE',''],
+['X9-04/3','Salida L (cód. 03K30)','LME71/LME72: no activa. LME73: alimentación de presostato opcional de control de estanqueidad (P LT)'],
+['X9-04/2','Entrada LT','LME71/LME72: no activa (entrada de realimentación). LME73: presostato opcional de control de estanqueidad (P LT)'],
+['X9-04/1','PE','']]},
+{h:'POC y válvula de seguridad - X2-02, X6-03', rows:[
+['X2-02/4','Entrada realimentación POC (cód. 04K22)','Si no se usa POC, colocar el puente Dbr1 entre X2-02/3 y X2-02/4'],
+['X2-02/3','Salida L alimentación POC','Parte de la carga total del bucle de seguridad máx. 2 A'],
+['X2-02/2','N',''],
+['X2-02/1','PE',''],
+['X6-03/3','L salida válvula extra (opcional válvula de seguridad SV) (cód. 03K57)','Máx. 1,5 A, cos phi >0,6'],
+['X6-03/2','N',''],
+['X6-03/1','PE','']]},
+{h:'Motor del ventilador y encendido - X2-01, X4-02', rows:[
+['X2-01/3','L salida motor ventilador M (cód. 03K105)','Máx. 2 A, cos phi >=0,4 (15 A durante máx. 0,5 s)'],
+['X2-01/2','N',''],
+['X2-01/1','PE',''],
+['X4-02/3','L salida encendido (Z), transformador (cód. 03K66)','Máx. 2 A, cos phi >0,4'],
+['X4-02/2','N',''],
+['X4-02/1','PE','Cable de alta tensión de encendido siempre separado del resto']]},
+{h:'Salidas de válvulas de combustible - X7-04, X7-02, X7-01', rows:[
+['X7-04/4 y X7-04/3','L salida válvula de combustible V1 (cód. 04K77)','Dos terminales L en el conector. Máx. 2 A (1 A con control de estanqueidad activo), cos phi >0,4'],
+['X7-04/2','N',''],
+['X7-04/1','PE',''],
+['X7-02/3','L salida válvula de combustible V2 (cód. 03K10)','Solo en LME72 y LME73 (LME71 no tiene X7-02). Máx. 2 A (1 A con control de estanqueidad activo)'],
+['X7-02/2','N',''],
+['X7-02/1','PE',''],
+['X7-01/3','L salida: según variante V2 (LME71.401), válvula piloto PV (LME71.402, LME72.541, LME73 con piloto) o V2a (LME72.521, LME73.810, LME73.820) (cód. 03K34)','Máx. 1 A, cos phi >0,4. En esquemas con piloto: puente Dbr2 entre X7-01/3 y X7-04/3 para encendido directo'],
+['X7-01/2','N',''],
+['X7-01/1','PE','']]},
+{h:'Actuador SQM4 (solo LME72 y LME73) - X2-09 (cód. 08K24)', rows:[
+['X2-09/1','SA-Z salida al actuador','Según 4.5 del manual: cerrado / posición de encendido / abierto en X2-09/1, /2, /3 (la correspondencia exacta con SA-Z, SA-KL, SA-NL no está indicada). AC 230 V, 0,1 A (1 millón de ciclos), cos phi >0,6'],
+['X2-09/2','SA-KL salida al actuador','Ver nota de X2-09/1'],
+['X2-09/3','SA-NL salida al actuador','Ver nota de X2-09/1'],
+['X2-09/4','SA-R señal hacia la unidad (flecha de entrada en el diagrama)',''],
+['X2-09/5','Sin rótulo en el diagrama',''],
+['X2-09/6','N',''],
+['X2-09/7','Salida K2/2: leva V2 (LME72.521, LME73.810, LME73.820); salida Dbr3 para válvula piloto PV (LME72.541, LME73.830, LME73.840)','AC 230 V, máx. 1 A, cos phi >0,4'],
+['X2-09/8','Entrada: leva V2 (LME72.521, LME73.810, LME73.820); entrada Dbr3 para PV (LME72.541, LME73.830, LME73.840)','Realimentación según el contacto del actuador. Puente Dbr3 entre X2-09/7 y /8 con piloto'],
+['X2-09/1-2-3-4','Puente Dbr4 entre los 4 pines para aplicaciones sin actuador SQM4','Solo en esquemas de PME73.820 y PME73.840']]},
+{h:'Detectores de llama - X10-05 (ionización) y X10-06 (QRA)', rows:[
+['X10-05/1','Tierra del quemador (PE)','En redes con neutro no puesto a tierra y supervisión por ionización, conectar X10-05/1 a tierra'],
+['X10-05/2','ION entrada sonda de ionización','Tensión en vacío AC 300 V; cortocircuito máx. AC 1 mA; corriente mínima DC 1 uA (indicación aprox. 20 %); máxima DC 40 uA (aprox. 100 %); cable máx. 30 m, separado; aislamiento mín. 50 Mohm sonda-masa'],
+['X10-05/3','No activo',''],
+['X10-05/4','GND',''],
+['X10-05/5','Salida L (alimentación)',''],
+['X10-06/1','Detector de llama QRA... (+)','QRA2 / QRA4.U / QRA10: tensión de servicio AC 280 V +-15 %; corriente mínima 70 uA; máxima 700 uA; cable máx. 100 m, normal, separado, no multihilo. Entrada no protegida contra cortocircuito: X10-06/2 a tierra puede destruirla'],
+['X10-06/2','Detector de llama QRA... (-)','No se permite funcionar a la vez con QRA e ionización']]},
+{h:'Interfaz BCI y conectores sin uso - X56, X65, X66, X76', rows:[
+['X56/1','U Display (alimentación de la pantalla, según rótulo del diagrama)','BCI para AZL2... u OCI410...; cable AGV50... máx. 1 m. El BCI no tiene separación segura de la tensión de red'],
+['X56/2','TXD0',''],
+['X56/3','RXD0',''],
+['X56/4','GND',''],
+['X65 (pines 1-2) y X66 (pines 1-3)','LME71 y LME72: no usados. LME73.810 y LME73.830: X65/1 LR-IN (analógico), X65/2 GND entrada LR; X66/1 alimentación 5 V, X66/2 señal, X66/3 GND','En LME73.820 y LME73.840 siguen como no usados'],
+['X76 (pines 1-4)','No usado','']]},
+{h:'Diferencias entre variantes', rows:[
+['LME71.000..','Sin actuador (sin X2-09), sin V2a, sin X7-02','Esquemas con X7-04 (V1) y X7-01 (V2 o piloto PV con puente Dbr2 para encendido directo). PME71.401 gas directo 1 o 2 etapas; PME71.402 gas directo o piloto, 1 etapa'],
+['LME72.000..','Con actuador SQM4 en X2-09, V2 en X7-02','PME72.521: V2a en X7-01, leva V2 en X2-09/7-8. PME72.541: piloto PV en X7-01, puente Dbr3 en X2-09/7-8 y Dbr2'],
+['LME73.000...','Como LME72 más P LT en X9-04 (control de estanqueidad) y entrada analógica de regulador en X65/X66 en PME73.810 y PME73.830','PME73.820 y PME73.840 admiten aplicación sin SQM4 con puente Dbr4'],
+['A1 / A2','A1 = AC 120 V; A2 = AC 230 V','Entradas: detección ON >AC 60 V (120 V) o >AC 120 V (230 V); OFF <AC 40 V o <AC 80 V. Corriente de entrada máx. 1,5 mA pico (120 V) o 1 mA pico (230 V). Rebote de contactos máx. 50 ms. Subtensión: paro seguro <=AC 165 V, rearranque >=AC 195 V (datos del manual dados una vez para ambos)']]}
+], notes:[
+'Sección transversal mínima de cables 0,75 mm2. Los cables de alimentación y bucle de seguridad se dimensionan según el fusible primario externo (máx. 6,3 A lento); el resto según el fusible interno (máx. 6,3 AT).',
+'Longitudes máximas: red 100 m; pantalla/BCI 1 m; regulador de carga 30 m; reset remoto 30 m; válvulas 30 m; otras líneas 30 m.',
+'Cable AGV50... (4 x 0,141 mm2, RJ11) entre LME7 y AZL2: no tenderlo junto con otros cables.',
+'Nunca tender el cable del detector junto a otros cables. La sonda de ionización no está protegida contra contacto accidental. Poner a tierra el quemador (no basta la caldera).',
+'Pruebas de aceptación exigidas: arranque con detector desconectado (bloqueo al final del primer tiempo de seguridad), con luz extraña (bloqueo en el prebarrido) y simulación de pérdida de llama en operación.',
+'Los bornes son los mismos para 120 V y 230 V; solo cambian los valores de tensión de entrada.',
+'No verificado: significado exacto de SA-Z / SA-KL / SA-NL / SA-R frente a cerrado / encendido / abierto del actuador.',
+'No verificado: significado del pin X56/1 rotulado U Display (texto pequeño en el diagrama).',
+'No verificado: en PME71.401 (pág. 36) el manual rotula X7-01 como válvula V2 pero no se aprecia el puente Dbr2; en PME71.402 (pág. 42) aparece X7-01 como válvula piloto PV con Dbr2.',
+'No verificado: corriente máxima de X6-03 frente a la de X3-04/2 cuando se suman (el manual da 1,5 A para SV y 2 A de total SL + SV + POC).',
+'No verificado: detalles del conector X2-09/5 (sin rótulo) y de los bornes del detector QRB/QRC en LME7 (no hay borne QRB en los diagramas; el parámetro 140 menciona Flame 2 QRB/QRC pero sin conexión dibujada).'
+], src:'Siemens CC1P7105 (Basic Documentation LME7...): 1.3 y 1.4 (págs. 11-12); 4.1 a 4.11 (págs. 19-25); diagramas de entradas/salidas: 9.4 (pág. 36), 10.4 (pág. 42), 11.5 (pág. 50), 12.5 (pág. 57), 13.5 (pág. 67), 14.6 (pág. 80), 15.5 (pág. 92), 16.6 (pág. 105 del PDF)'};
+
+var ESQ_LMV3 = {id:'lmv3', name:'LMV 2x / 3x', intro:'Centralitas Siemens LMV27.100A2 y LMV37.4 (LMV37.400A1 AC 120 V, LMV37.400A2 AC 230 V, LMV37.420A1 AC 120 V versión América del Norte). Control electrónico de relación aire-combustible con hasta 2 actuadores paso a paso, control de variador (VSD), control de estanqueidad de válvulas y BCI para AZL2... Se indican los pines solo cuando el manual los numera.', groups:[
+{h:'Alimentación y bucle de seguridad - X3-04', rows:[
+['X3-04/5','L fase de red','Fusible primario externo máx. 16 AT; fusible interno F1 6,3 AT (DIN EN 60127-2/5)'],
+['X3-04/4','N neutro','Aplicar red siempre por L y N; sin diferencia de potencial entre N y PE'],
+['X3-04/3','PE tierra de protección',''],
+['X3-04/2','Salida L señal de alimentación del bucle de seguridad','Corriente total de entrada de la unidad por el bucle de seguridad (contactor ventilador, encendido, válvulas, bomba/embrague) máx. 5 A'],
+['X3-04/1','Entrada bucle de seguridad (limitador, falta de agua, opcionalmente presostato máximo)','Bucle de seguridad + brida del quemador: cable total máx. 20 m']]},
+{h:'Brida del quemador - X3-03', rows:[
+['X3-03/2','L alimentación para el final de carrera de la brida del quemador','Parte del bucle de seguridad'],
+['X3-03/1','Entrada final de carrera de la brida del quemador','Cable de bucle + brida máx. 20 m en total']]},
+{h:'Ventilador, alarma y ventilación continua - X3-05', rows:[
+['X3-05/1','L salida contactor del ventilador (SI)','Máx. 2 A (A1) o 1,6 A pilot duty UL372 (A2); cos phi >0,4; contactor de unos 200 VA'],
+['X3-05/2','L salida alarma (No-SI)','Máx. 1 A, cos phi >0,4. Activa en bloqueo (fase 00); puede indicar prevención de arranque'],
+['X3-05/3','L salida ventilador en funcionamiento continuo','Se toma detras del fusible y del bucle de seguridad. Usar para ventilación continua']]},
+{h:'Termostato / regulador de carga - X5-03', rows:[
+['X5-03/4','L alimentación del regulador de carga externo (orden según dibujo; no numerado en texto)',''],
+['X5-03/3','Regulador externo ABRIR / etapa 2','Modulante: ABRIR sube potencia; multietapa: etapa 2'],
+['X5-03/2','Regulador externo CERRAR / etapa 3','Modulante: CERRAR baja potencia; multietapa: etapa 3'],
+['X5-03/1','Regulador externo On/Off (petición de calor)','Arranque solo con X5-03/1 cerrado. Cable máx. 20 m'],
+['X64/1-X64/2','Entrada analógica 4...20 mA de potencia preseleccionada','Corriente <3 mA o corte desactiva la potencia externa. Cable máx. 20 m']]},
+{h:'Presostatos - X3-02, X9-04, X5-01, X5-02', rows:[
+['X3-02/2','L alimentación presostato de aire (LP)','Contacto NO. Si no se usa, puente entre X3-02/1 y X3-05/1'],
+['X3-02/1','Entrada presostato de aire (LP)',''],
+['X9-04/3','L alimentación presostato control de estanqueidad (P LT) o GP(VPS)','Activo solo con gas y control de estanqueidad activado'],
+['X9-04/2','Entrada LT presostato control de estanqueidad gas',''],
+['X9-04/1','PE',''],
+['X5-01/3','L alimentación presostato gas mínimo (Pmin) / aceite mínimo','Si no hay Pmin, puente entre bornes 2 y 3'],
+['X5-01/2','Entrada presostato mínimo (mín)',''],
+['X5-01/1','PE',''],
+['X5-02/3','L alimentación presostato máximo (Pmax) o POC','Si no se usa, puente entre bornes 2 y 3'],
+['X5-02/2','Entrada presostato máximo (máx) o POC','Contacto NC (abre al superar la presión máxima)'],
+['X5-02/1','PE','']]},
+{h:'Encendido y válvulas de combustible - X4-02, X8-02, X7-01, X7-02, X6-03', rows:[
+['X4-02/3-2-1','Encendido Z: L / N / PE','Transformador o módulo de encendido. Máx. 2 A (A1) o 1,6 A pilot duty UL372 / 250 VA (A2); cos phi >0,2'],
+['X8-02','Válvula de combustible V1: L, punto de cableado para válvulas en serie, N, PE (orden del dibujo)','Auxiliar para conexión en serie de dos válvulas AC 115 V. Máx. 2 A (A1) / 1,6 A pilot duty (A2); cos phi >0,4. No verificada la numeración de pines'],
+['X7-01','Válvula de combustible V2: L / N / PE','Mismos límites que V1'],
+['X7-02/3-2-1','Válvula V3 o válvula piloto PV: L / N / PE','Mismos límites que V1'],
+['X6-03/3-2-1','Válvula extra SV (seguridad): L / N / PE','Conectada en paralelo con el ventilador'],
+['X8-04/2','Salida indicación de funcionamiento (lámpara combustible aceite/gas)','Máx. 0,5 A, cos phi >0,4; en paralelo con la válvula V1'],
+['X8-04/1','Entrada reset / bloqueo manual','Cable máx. 20 m']]},
+{h:'Detectores de llama - X10-05 y X10-06', rows:[
+['X10-05/5','L señal de alimentación',''],
+['X10-05/4','GND (QRB / QRC)',''],
+['X10-05/3','Señal QRB / QRC','QRB: tensión en vacío aprox. DC 5 V; cable máx. 3 m (hilo-hilo 100 pF/m). Umbrales: prevención de arranque con RQRB <400 kohm (intensidad >10 %); operación con RQRB <230 kohm (>16 %); cortocircuito con RQRB <0,5 kohm (el manual también indica <500 ohm). QRC solo para AC 230 V (indicación en AZL2 limitada a aprox. 55 %)'],
+['X10-05/2','ION sonda de ionización','Tensión en vacío aprox. la de red; cortocircuito máx. AC 1 mA; corriente mínima DC 4 uA (indicación aprox. 30 %); máx. DC 16...40 uA (aprox. 100 %); cable máx. 3 m (hilo-masa 100 pF/m), separado'],
+['X10-05/1','PE',''],
+['X10-06/2 y /1','Detector UV QRA... (+) y (-) según orientación del dibujo','QRA2 / QRA4.U / QRA10: datos técnicos en las hojas N7712 y N7711, no incluidas aquí. Exige que la unidad esté conectada a red permanentemente para detectar fallo del detector']]},
+{h:'Contador de combustible - X75', rows:[
+['X75/1','Alimentación del detector del contador de combustible','Solo como alternativa al control del VSD'],
+['X75/2','Entrada contador de combustible','Contador con contacto Reed; frecuencia máxima 300 Hz; máximo 400 impulsos por unidad de volumen']]},
+{h:'Actuadores paso a paso - X54 (combustible) y X53 (aire)', rows:[
+['X54/1','UAC_SA','Orden de pines según el esquema de la figura 41'],
+['X54/2','GND',''],
+['X54/3','ACT0_OUT_A',''],
+['X54/4','ACT0_OUT_B',''],
+['X54/5','ACT0_IN_A',''],
+['X54/6','ACT0_IN_B',''],
+['X53','UAC_SA, GND, ACT1_OUT_A, ACT1_OUT_B, ACT1_IN_A, ACT1_IN_B','Orden no verificado: la figura 42 y la figura 53 del manual difieren (ver notas). Actuadores SQM33... / SQN1... mecánicamente rígidos con el elemento de control']]},
+{h:'Variador de velocidad (VSD) y ventilador PWM - X74 y X64 (solo LMV37)', rows:[
+['X74/1','DC 24 V externo (alimentación del VSD)','Alimentación externa obligatoria; separación estricta de la tensión de red (SELV/PELV)'],
+['X74/2','GND / referencia de señal',''],
+['X74/3','Control VSD DC 0 / 2...10 V','Salida de tensión, precisión +-1 %; parámetro 645 selecciona 0...10 V, 2...10 V o 0/2...10 V'],
+['X74/4','Entrada de velocidad (realimentación)','Motor 300...6500 rpm; 100 % de velocidad 650...6500 rpm; sensor inductivo DIN 19234 (Namur) u open collector pnp; cable máx. 100 m, separado'],
+['X74/5','Alimentación del sensor de velocidad','DC 10 V, máx. 15 mA'],
+['X64/1','Entrada de regulador 4...20 mA',''],
+['X64/2','GND',''],
+['X64/3','Salida de velocidad PWM','Ventilador PWM solo con control de relación neumático'],
+['X64/4','Realimentación de velocidad',''],
+['X64/5','Alimentación del sensor','Alimentación externa por X74/1 y X74/2 también con ventilador PWM']]},
+{h:'BCI / AZL y Modbus - X56 y X92', rows:[
+['X56/1','DC 5 V (display / BCI, RJ11)','AZL2... vía cable AGV50... (1 m o 3 m). FELV sin separación segura de la red; desconectar con instalación sin tensión'],
+['X56/2','TxD0',''],
+['X56/3','RxD0',''],
+['X56/4','Referencia de señal GND',''],
+['X92/1','DC 5 V (COM, Modbus vía OCI412.10)','Parámetros Modbus: dirección 1...247; baudios 9600 o 19200; paridad ninguna, impar o par'],
+['X92/2','TxD1',''],
+['X92/3','RxD1',''],
+['X92/4','Referencia de señal GND','']]},
+{h:'Diferencias entre variantes', rows:[
+['LMV27.100A2','Sin VSD ni realimentación de velocidad, sin entrada 4...20 mA, sin salida analógica de VSD, sin ionización en servicio continuo','Según la tabla de funciones CC1Q7541; mantiene actuadores, detectores y el resto de entradas/salidas'],
+['LMV37.400A1','AC 120 V; detectores QRA2 / QRA4.U / QRA10 / QRB / ION','Subtensión: paro aprox. AC 93 V, rearranque aprox. AC 96 V; entradas ON AC 90...132 V, OFF <AC 40 V. Salidas de potencia: 2 A'],
+['LMV37.400A2','AC 230 V; QRA2 / QRA4.U / QRA10 / QRB / QRC / ION','Subtensión: paro aprox. AC 186 V, rearranque aprox. AC 195 V; entradas ON AC 180...253 V, OFF <AC 80 V. Salidas: 1,6 A pilot duty UL372 (ventilador, válvulas, encendido)'],
+['LMV37.420A1','AC 120 V, parámetros América del Norte; QRA4.U / QRB / ION','Mismas cifras de salida que 400A1']]}
+], notes:[
+'Sección mínima de cables 0,75 mm2. Longitudes máximas: red 100 m; display/BCI 3 m; regulador de carga X5-03 20 m; X64 (24 mA) 20 m; bucle de seguridad + brida 20 m en total; reset externo 20 m; otras líneas 3 m.',
+'Proteger los terminales no usados con conectores ficticios, excepto X64 (reserva) y X74. Separar estrictamente la sección de AC 120/230 V de las de muy baja tensión (SELV, PELV, FELV).',
+'Comprobar antes de poner en marcha la asignación correcta de los conectores RAST: no hay protección absoluta contra conexión incorrecta.',
+'Comprobar las funciones: presostato de aire, gas mínimo y máximo o POC, estanqueidad, presión de aceite mínimo y máximo, bucle de seguridad.',
+'No verificado: numeración de pines de X8-02 (V1), X7-01 (V2), X6-03, X4-02 y X7-02 más allá del orden dibujado: la numeración PE=1, N=2, L=3 se deduce de la posición del 1 en el diagrama.',
+'No verificado: numeración de pines de X5-03/4 (L del regulador), no escrita en el texto.',
+'No verificado: el orden de pines de X53 (aire): la figura 42 (texto) lo da como UAC_SA, ACT0_OUTA, ACT_OUTB, ACT0_IN_A, ACT0_IN_B, GND, mientras que la figura 53 (pág. 112) lo dibuja distinto y con ACT1. Verificar con la hoja de datos del conector.',
+'No verificado: polaridad de X10-06 (QRA): en el diagrama el orden aparece invertido respecto al de LME7; verificar con la hoja del QRA.',
+'No verificado: tensión de red y funciones concretas de LMV27.100A2 en tablas de bornes; el documento solo lo lista en el resumen de gama CC1Q7541. Tampoco hay en el manual de LMV37 una sección 1.4 de bornes: la 1.4 solo explica clases de baja tensión (SELV/PELV/FELV).',
+'No verificado: datos de QRA2 / QRA4.U / QRA10 con LMV (remitidos a hojas N7712 y N7711 que no están en los PDF).'
+], src:'Siemens CC1P7546 (Basic documentation LMV37.4...): 1.3 a 1.5 (págs. 14-16), 4.1 a 4.4 (págs. 22-28), 6.1 y 6.3-6.4 (págs. 30-45), 8.6 (pág. 76), 10 (pág. 88), 11.3-11.14 (págs. 96-107), 12-13 (págs. 108-110), 14 Inputs and outputs (pág. 112, figura 53), 16 (págs. 113-115), 17 (pág. 116); Siemens CC1Q7541 (Range Overview LMV2/LMV3, págs. 2-3)'};
+var ESQ_LMV5 = {id:'lmv5', name:'LMV 5x', intro:'Bornes de la unidad base LMV5... (LMV50/51/52) según la Guía de instalación oficial de Siemens (CC1J7550.1en). Cada conector se designa Xn-nn y el número tras el punto es el pin (p. ej. X9-01.4 = conector X9-01, pin 4). Tensión de red de los bornes de entrada/salida: AC 230 V +10 %/-15 %, 50...60 Hz.', groups:[
+{h:'Alimentación, lazo de seguridad y ventilador', rows:[
+['X3-04.5','Fase (L) de alimentación','Fusible 6,3 AT'],
+['X3-04.4','Neutro (N) de alimentación',''],
+['X3-04.3','Tierra de protección (PE)','También se usa para conectar PE del sistema'],
+['X3-04.1','Entrada lazo de seguridad (cadena de seguridad)','Imax 5 A'],
+['X3-04.2','Salida de tensión para el lazo de seguridad','Imax 5 A'],
+['X3-03.1','Entrada final de carrera de la brida del quemador (parte del lazo de seguridad)','Imax 5 A'],
+['X3-03.2','Salida de tensión para el final de carrera de la brida','Imax 5 A'],
+['X3-02.1','Entrada presostato de aire (LP/APS)','Contactos externos chapados en oro'],
+['X3-02.2','Salida de tensión para el presostato de aire','Imax 500 mA'],
+['X3-01.1','Salida contactor del motor del ventilador','1 A, cos fi 0,4'],
+['X3-01.2','Salida alarma','1 A, cos fi 0,4']]},
+{h:'Selección de combustible, reset y regulador', rows:[
+['X4-01.1','Entrada selección de combustible: gas','Si los pines 1-2 no se usan la selección es "interna"'],
+['X4-01.2','Entrada selección de combustible: gasóleo (oil)','Con gas y gasóleo activos a la vez: fallo'],
+['X4-01.3','Entrada contacto del contactor del ventilador (FCC) o presostato FGR (FGR-PS)',''],
+['X4-01.4','Entrada reset / bloqueo manual',''],
+['X5-03.1','Entrada regulador (marcha/paro ON/OFF)','Se puede desactivar con el parámetro InputController'],
+['X5-03.2','Entrada regulador cierra / escalón 3','Según la tabla del manual; ver notas'],
+['X5-03.3','Entrada regulador abre / escalón 2','La tabla del manual dice "escalón 3"; el esquema de bloques dice "escalón 2"'],
+['X5-03.4','Salida de tensión para el regulador','Imax 500 mA']]},
+{h:'Encendido y arranque', rows:[
+['X4-02.1 / .2','PE / Neutro (N) del transformador de encendido',''],
+['X4-02.3','Salida encendido (transformador de encendido)','2 A, cos fi 0,2'],
+['X4-03.1 / .2','PE / Neutro (N)',''],
+['X4-03.3','Salida señal de arranque o alivio del presostato de aire (válvula de test APS)','0,5 A, cos fi 0,4']]},
+{h:'Válvulas de gas', rows:[
+['X9-01.1','Válvula de combustible SV (gas)','2 A, cos fi 0,4'],
+['X9-01.2','Válvula de combustible PV (gas, piloto)','2 A, cos fi 0,4'],
+['X9-01.3','Válvula de combustible V2 (gas)','2 A, cos fi 0,4'],
+['X9-01.4','Válvula de combustible V1 (gas)','2 A, cos fi 0,4'],
+['X9-02.1 / .2','Neutro (N) / PE de las válvulas de gas','Según la tabla: PIN1 N, PIN2 PE']]},
+{h:'Presostatos de gas', rows:[
+['X9-03.4','Entrada presostato de gas mínimo / liberación de arranque gas','En LMV52 solo presostato de gas mínimo; en LMV51 también puede ser liberación de arranque gas (en serie)'],
+['X9-03.3','Entrada presostato de gas máximo (DWmax-gas)',''],
+['X9-03.2','Entrada presostato de control de estanqueidad VP-gas / LT o indicador de posición cerrada de válvula (CPI)','Se configura con el parámetro PS-VP/CPI'],
+['X9-03.1','Salida de tensión para los presostatos de gas','Imax 500 mA']]},
+{h:'Gasóleo: bomba, válvulas y presostatos', rows:[
+['X6-01.1','Entrada liberación de arranque gasóleo','Típico: presostato del medio de atomización'],
+['X6-01.2','Salida de tensión para la liberación de arranque gasóleo','Imax 500 mA'],
+['X6-01.3','Entrada arranque directo de fuel pesado',''],
+['X6-01.4','Salida de tensión para el arranque directo de fuel pesado','Imax 500 mA'],
+['X6-02.3','Salida bomba de gasóleo / acoplamiento magnético','2 A, cos fi 0,4. Pines 1 PE y 2 N'],
+['X6-03.3','Válvula de combustible SV (gasóleo)','1 A, cos fi 0,4. Pines 1 PE y 2 N'],
+['X7-01.3','Válvula de combustible V2 (gasóleo)','1 A, cos fi 0,4. Pines 1 PE y 2 N'],
+['X7-02.3','Válvula de combustible V3 (gasóleo)','1 A, cos fi 0,4. Pines 1 PE y 2 N'],
+['X8-02.1','Válvula de combustible V1 (gasóleo)','1 A, cos fi 0,4'],
+['X8-02.2','Punto auxiliar de cableado para válvulas conectadas en serie',''],
+['X8-02.3 / .4','Neutro (N) / PE','Según la tabla: PIN3 N, PIN4 PE'],
+['X8-03.1','Válvula de combustible V1 (gasóleo)','1 A, cos fi 0,4'],
+['X8-03.2','Punto auxiliar de cableado para válvulas conectadas en serie',''],
+['X8-03.3 / .4','Neutro (N) / PE','Según la tabla: PIN3 N, PIN4 PE'],
+['X5-01.2','Entrada presostato de gasóleo mínimo (DWmin-oil)',''],
+['X5-01.3','Salida de tensión para el presostato de gasóleo mínimo','Imax 500 mA. Pin 1 PE'],
+['X5-02.2','Entrada presostato de gasóleo máximo (DWmax-oil)',''],
+['X5-02.3','Salida de tensión para el presostato de gasóleo máximo','Imax 500 mA. Pin 1 PE'],
+['X7-03.2','Entrada liberación de arranque gas (CPI) en LMV52','En LMV51 sin función. Se configura con el parámetro StartReleaseGas'],
+['X7-03.3','Salida de tensión (reserva)','Imax 500 mA. Pin 1 PE']]},
+{h:'Señalización', rows:[
+['X8-01.1','Salida lámpara de señal: funcionando con gas','1 A, cos fi 0,4'],
+['X8-01.2','Salida lámpara de señal: funcionando con gasóleo','1 A, cos fi 0,4']]},
+{h:'Detectores de llama y transformador AGG5.2...', rows:[
+['X10-03.1','Sonda de ionización (ION)','Imax 0,5 mA'],
+['X10-02.1','Señal del detector QRB... (fotocélula)','Máx. DC 8 V'],
+['X10-02.2','Alimentación del detector QRI... (infrarrojos)','DC 14/21 V, Imax 100 mA'],
+['X10-02.3','Tensión de alimentación (L) del detector','Imax 500 mA. La tabla la llama "Power signal"'],
+['X10-02.4','Neutro (N)',''],
+['X10-02.5','Tierra de protección (PE)',''],
+['X10-02.6','Señal del detector QRI... (infrarrojos)','Umax DC 5 V'],
+['X10-01.1','Señal AC G (del transformador AGG5.2...)','AC 12 V'],
+['X10-01.2','Señal AC G0 (del transformador AGG5.2...)','AC 12 V'],
+['X10-01.3','Señal de tensión del transformador','230 V, máx 1 mA'],
+['X10-01.4','Neutro (N)','']]},
+{h:'Bus CAN, display AZL5 y actuadores', rows:[
+['X50 / X51 pin 1','Pantalla del cable (tierra funcional)','Dos conectores iguales en paralelo para bus CAN'],
+['X50 / X51 pin 2 y 3','Alimentación 12 V AC para actuadores y display AZL...','Fusible máx 4 A'],
+['X50 / X51 pin 4 y 5','Señales de comunicación CAN','Nivel según ISO-DIS 11898'],
+['X50 / X51 pin 6','Masa de referencia (PELV)',''],
+['X52.1','Alimentación 12 V AC (12VAC1) desde el transformador al sistema',''],
+['X52.2','Masa de referencia (PELV)',''],
+['X52.3','Alimentación 12 V AC (12VAC2) desde el transformador al sistema',''],
+['X52.4','Tierra funcional (FE)','Conectar con cable corto al punto de tierra']]},
+{h:'Regulador de temperatura/presión (entradas analógicas)', rows:[
+['X60.1','Sonda de temperatura Pt100 (entrada 1)',''],
+['X60.2','Compensación de línea de la sonda Pt100',''],
+['X60.3','Sonda de temperatura Pt/LG-Ni 1000 (entrada 4)',''],
+['X60.4 / .5','Masa de referencia / tierra funcional (pantalla)',''],
+['X61.1','Alimentación del transmisor de temperatura/presión','Aprox. DC 20 V, máx 25 mA'],
+['X61.2','Entrada de tensión 0...10 V (entrada 2)',''],
+['X61.3','Entrada de corriente 4...20 mA (entrada 2)',''],
+['X61.4 / .5','Masa de referencia / tierra funcional (pantalla)',''],
+['X62.1','Alimentación para cambio de consigna','Aprox. DC 24 V, máx 2 mA'],
+['X62.2','Entrada de tensión 0...10 V de consigna o carga (entrada 3)',''],
+['X62.3','Entrada de corriente 4...20 mA de consigna o carga (entrada 3)',''],
+['X62.4 / .5','Masa de referencia / tierra funcional (pantalla)',''],
+['X63.1','Salida de corriente 4...20 mA de carga del quemador (LOAD OUTPUT)','RLmax 500 ohm'],
+['X63.2','Masa de referencia',''],
+['X63.3','Tierra funcional (pantalla)','']]},
+{h:'Módulo de variador de velocidad VSM (opcional)', rows:[
+['X70.1 / .2 / .3','Alimentación del sensor de velocidad (aprox. 10 V) / entrada de velocidad / masa de referencia','Pin 4 reserva, pin 5 tierra funcional'],
+['X71.1 / .2 / .3','Alimentación del contador de combustible / entrada contador de gas / masa','Pin 4 tierra funcional'],
+['X72.1 / .2 / .3','Alimentación del contador de combustible / entrada contador de gasóleo / masa','Pin 4 tierra funcional'],
+['X73.1 / .2','Contacto de referencia / contacto de liberación (arranque del variador)','Máx AC/DC 24 V, 2 A'],
+['X73.3','Entrada de alarma del variador','DC 0...24 V'],
+['X73.4','Salida 0/4...20 mA de consigna al variador','RLmax 750 ohm'],
+['X73.5 / .6','Masa de referencia / tierra funcional','']]},
+{h:'Display AZL5 (conectores propios del display)', rows:[
+['X70 (CAN) pin 2 / 3 / 7','CAN L / GND / CAN H','Pin 4 VAC2, pin 8 VAC1'],
+['X71 (COM1) pin 2 / 3 / 5','RxD / TxD / GND','RS-232 para PC (parametrización y visualización)'],
+['X72 (COM2) pin 1 / 3 / 4,6','TxD / RxD / GND','Para BMS por interfaz e-bus externa; pin 5 U1 y pin 7 U2. COM1 y COM2 no pueden estar activos a la vez']]}
+], notes:[
+'Los parámetros citados (InputController, PS-VP/CPI, StartReleaseGas, ver también X7-03.2 y X9-03.4) provienen del manual de parámetros LMV5 incluido (lmv5par), sección de parámetros de Burner Control.',
+'Discrepancia del manual: la tabla de bornes (p. 4) indica X5-03.2 "cierra / escalón 3" y X5-03.3 "abre / escalón 3"; el esquema de bloques (p. 10) indica X5-03.3 "abre / escalón 2". Comprobar en la documentación de la versión concreta.',
+'No verificado: el manual lmv5acs.pdf incluido es el software de PC ACS450 y no contiene bornes; los bornes proceden de otra fuente oficial de Siemens (ver src). Es la edición 09.06.2005, anterior a versiones recientes del LMV5; la numeración puede variar en equipos nuevos.',
+'No verificado: la columna entrada/salida de cada borne no se ha transcrito; las asignaciones corresponden a las descripciones de la tabla y del esquema de bloques.',
+'No verificado: el cableado concreto de actuadores SQM4 y módulo de O2 (PLL52) por bus CAN solo se ha tomado en cuanto a conectores X50/X51/X52; los esquemas de ejemplo de topología y terminación de bus no se han transcrito.',
+'Seguridad: seguir las notas de seguridad de la Basic Documentation P7550 antes de manipular el cableado.'
+], src:'Siemens, Installation Guide for LMV5... System, CC1J7550.1en, 09.06.2005, pp. 4-8 (tablas de bornes), 9-12 (esquema de bloques), 13 (AZL5), 17 (alimentación). http://www.peconet.com/products/SiemensBulletins/LMV-install.pdf. Complemento: lmv5par.pdf (parámetros).'};
+
+var ESQ_MPA = {id:'dungs', name:'DUNGS MPA 41xx', intro:'Bornero de 20 bornes del automatismo de gas DUNGS MPA 41xx (MPA 411x y MPA 412x), según el manual oficial MPA 41xx V2.0 (edición 2023.06). Tensión nominal 230 V AC o 115 V AC según versión, 50-60 Hz. No hay transformador de encendido integrado. Los cables de conexión deben soportar al menos 75 C.', groups:[
+{h:'Alimentación', rows:[
+['1 y 2','Fase L1 (puente de fábrica entre 1 y 2)','No quitar el puente. Solo puede quitarse si la corriente total de la aplicación es inferior a 5 A. Fusible integrado 6,3 A T (10 A F)'],
+['3','Neutro (N)','En el diagrama de la tabla de entradas figura como "A"'],
+['4','Tierra de protección (PE)','']]},
+{h:'Seguridad y presostatos', rows:[
+['9 y 10','Cadena de seguridad (contacto libre de potencial)','Mín. 5 A, máx 100 m. Intercalar aquí presostatos o termostatos de seguridad como contactos libres de potencial'],
+['8','Salida ventilador (Air out)','Relé 1 A cos fi 0,4 (equivale a 2,5 A cos fi 1), máx 100 m']]},
+{h:'Válvulas de gas y encendido', rows:[
+['13','Salida V1, válvula principal de gas','Relé 115/230 V AC, 2 A, cos fi 1, carga mínima 0,5 W; relevante para seguridad'],
+['14','Salida V2, válvula de seguridad de gas (SR out)','Relé 115/230 V AC, 2 A, cos fi 1. Función según parámetro P38'],
+['15','Salida encendido (transformador de encendido)','Semiconductor 115/230 V AC, 2 A; con preencendido mayor de 100 s o ciclo mayor de 80 % baja a 1,5 A']]},
+{h:'Detector de llama', rows:[
+['5','Entrada ionización (ION) / detector de llama 1','Umbral aprox. 1,2 uA, máx 10 m (hasta 50 m a consulta). Con transformador DUNGS DEZ 1xx SEO en un electrodo, el cable verde/amarillo va al borne 5'],
+['7','Alimentación al detector de llama (FLW power)','230 V AC, 10 mA, también en la versión 115 V. Para UV 41 (HE), UV 42, FLW 10x, FLW 20x, KLC 20/230'],
+['16','Entrada FLW 2 NO (detector de llama 2) / X16','Configurable con P26. Se usa como señal del segundo detector, ver esquemas de detector']]},
+{h:'Salidas de señalización', rows:[
+['11','Salida de funcionamiento (NSR out)','Relé 115/230 V AC, 1 A. Función según P19 (por defecto 3 = llama conectada)'],
+['12','Salida de fallo (Fault)','Relé 115/230 V AC, 1 A, cos fi 1']]},
+{h:'Entradas configurables (SR in)', rows:[
+['16 (X16)','Entrada configurable, parámetro P26','Contacto 115/230 V AC; valor por defecto 0 (sin función)'],
+['17 (X17)','Entrada configurable, parámetro P18','Valor por defecto 0 (sin función)'],
+['18 (X18)','Entrada configurable, parámetro P27','Valor por defecto 0 (sin función)'],
+['19 (X19)','Entrada configurable, parámetro P28','Valor por defecto 10 (petición de calor / termostato)'],
+['20 (X20)','Entrada configurable, parámetro P29','Valor por defecto 11 (desbloqueo remoto)']]},
+{h:'Funciones asignables a las entradas X16 a X20 (parámetro P18)', rows:[
+['1 / 2','Llama NC / Llama NO (señal de llama)','Deben seleccionarse ambas'],
+['3','Vigilancia de presión mínima de gas',''],
+['4 / 5','Contacto final POC de V1 / de V2',''],
+['6','Liberación de arranque',''],
+['7','V2 por escalones (conecta la salida X14 en operación)',''],
+['8','Quemador principal conectado',''],
+['9 / 14','Presostato de aire LDW1 / LDW2','Tener en cuenta P16 / P66'],
+['10','Petición de calor / regulador de temperatura',''],
+['11','Desbloqueo remoto',''],
+['12','Barrido de aire (air purge)',''],
+['13','Enfriamiento (control del ventilador X8)',''],
+['15','Presostato de gas máximo (GDWmax)','']]}
+], notes:[
+'Conexión del detector de llama: ver esquemas del manual p. 12-13. Ionización con un electrodo: 15 encendido, 3 N, 5 ION; con dos electrodos: 15 encendido, 3 N, 4 PE, 5 ION. UV 41 (HE) / FLW 10 IRx / FLW 20 UVx / KLC 20/230: 4 PE, 5 ION, 7 FLW power. FLW 10 y FLW 20 no tienen conexión PE.',
+'Detector 2 (FLW 41I y UV 42): usar para longitudes mayores de 10 m en ionización. Para los cables de encendido usar cable con resistencia interna (fibra de carbono) o, con núcleo de cobre, bujías con supresión de interferencias de al menos 1 kOhm.',
+'La suma de corrientes de todos los consumidores de seguridad no debe pasar de 5 A y la de todos los consumidores de 6,3 A (10 A). El MPA 4122 requiere fusible previo de 10 A y su interruptor general no es un seccionador: hay tensión dentro de la caja.',
+'No verificado: la función del borne 6, que aparece en el diagrama sin rótulo claro, no está descrita en las tablas y no se incluye. La conexión de interfaz TWI (solo para VisionBox) y de la pantalla AM 41 externa no se detalla aquí.',
+'No verificado: el MPA 412x tiene dos bornes L adicionales en su diagrama (p. 9); el texto extraído no los describe y no se han transcrito. Se asume la misma asignación 1-20 que el 411x según las tablas técnicas.',
+'Los bornes 8, 11, 12 y 14 de las tablas se corresponden con las etiquetas del diagrama de la p. 8 (Air out, NSR out, Fault, SR out).'
+], src:'DUNGS MPA 41xx V2.0, MC edición 2023.06, no. 300 967: diagramas de conexión pp. 8-9, tablas de salidas/entradas p. 10, detección de llama pp. 12-13, parámetros P18/P19/P26-P29/P38 pp. 35-37 y 44.'};
+var ESQ_BT = {id:'lamtec', name:'LAMTEC BT3xx', intro:'Esquema de conexionado del BurnerTronic BT300 (modelos BT320, BT330 y BT340), según el diagrama de conexión del manual: el mismo dibujo vale para BT320, BT330, BT331, BT340 y BT341. Las regletas X01 a X10 y X20 a X26 están en el propio equipo (conector RAST 5 opcional según el manual); X30 a X34 son conectores RAST 2,5 en la parte inferior (actuadores, interfaz de usuario y LSB). El orden de los contactos de cada regleta es el del dibujo.', groups:[
+{h:'Alimentación (230 V)', rows:[
+['X23','Entrada de alimentación de red: N, PE, L (de arriba abajo en el dibujo). Fusible externo F1 en la línea L','230 V CA, 47-63 Hz. Fusible externo obligatorio, máximo 10 A lento. Solo en red con toma de tierra'],
+['X22','Salida de 230 V CA para alimentar dispositivos externos: N, PE, L','Longitud de cable ilimitada (X22-X23)'],
+['PE (arriba de X26)','Tierra del quemador (PE, borne marcado con símbolo de tierra)','Etiqueta del dibujo: PE (Earth burner)']
+]},
+{h:'Salidas a 230 V: motor, bomba y alarma', rows:[
+['X25','Motor del ventilador de aire de combustión (VL): N, PE, señal','Salida de relé, máximo 2 A cos fi 0,4. Cable máximo 10 m'],
+['X26','Bomba de gasóleo: N, PE, señal','Máximo 2 A cos fi 0,4. Cable máximo 10 m. Con P 801 = 2, 5, 6, 7 u 8 la salida X26 pasa a ser señal de estado del proceso y no bomba (ver notas)'],
+['X24','Salida de alarma / aviso de avería: N, PE, señal','Máximo 1 A cos fi 0,3. En la guía Baltur (menú de salidas) X24 aparece como Error y también como selección gasóleo/gas, regulable con P 809. Cable máximo 20 m según el manual EN, 10 m según la guía Baltur']
+]},
+{h:'Válvulas y encendido (salidas 230 V)', rows:[
+['X01','Válvula de combustible 1 (lado gas). Contactos: señal, PE, N','Gas: válvula gas 1. Gasóleo: válvula gasóleo 1. Máximo 1 A cos fi 0,4. Cable máximo 10 m'],
+['X02','Válvula de combustible 2 (lado quemador). Contactos: señal, PE, N','Gas: válvula gas 2. Gasóleo: válvula gasóleo 2. Para el barrido de techo la válvula X02 se activa 3 s según el manual EN'],
+['X03','Válvula de combustible 3 / válvula de encendido (opcional). Contactos: señal, PE, N','Gas: válvula de encendido. Gasóleo: válvula gasóleo 3 (tercera etapa)'],
+['X04','Transformador de encendido. Contactos: señal, PE, N','Máximo 2 A cos fi 0,2. Cable máximo 10 m. Imprescindible conectar el PE del transformador']
+]},
+{h:'Entradas a 230 V: presostatos, cadenas de seguridad y mando', rows:[
+['X05','Presostato de presión mínima de combustible (gas >min.): señal, PE, L','Con quemador solo de gasóleo la función Presión de gasóleo >min. se asigna a X05. Con BT340 + DFM300 (gasóleo/gas) la función Gas >min. va en X05 y el presostato de gasóleo mínimo va en la cadena de seguridad de gasóleo. Cable máximo 10 m'],
+['X06','SIC quemador (cadena de interbloqueo de seguridad del quemador): señal, PE, L','En BT320/330 solo hay una cadena de seguridad, la de X06. Cable máximo 10 m'],
+['X07','SIC caldera (cadena de seguridad de la caldera): entrada y L (2 contactos)','Cable máximo 20 m'],
+['X08','Presostato de aire: entrada y L (2 contactos)','Cable máximo 10 m'],
+['X09','Regulación de potencia: contacto 1 = potencia - (Firing rate -), contacto 2 = potencia + (Firing rate +), contacto 3 = L','Pines 1 y 2 confirmados en el manual EN como Load- y Load+ (cap. DFM300). Cable máximo 20 m. Si se conecta un LCM100 ya no se admiten potencia+/- por X09 (versiones BT300 1.x.x.x)'],
+['X10','Contacto 1 = Reset de avería (Fault reset), contacto 2 = Arranque del quemador (Burner ON), contacto 3 = L','X10.2 = Burner ON confirmado en el texto; X10.1 = Reset según el orden del dibujo. Cable máximo 20 m']
+]},
+{h:'Detección de llama', rows:[
+['X20 contacto Ion','Electrodo de ionización','Cable máximo 20 m (3 m según guía Baltur)'],
+['X20 contacto L','Contacto L (alimentación) para sensores de llama de 3 hilos (KLC1000, KLC2002)','Hilo marrón (BN) del KLC'],
+['X20 contacto LDR+','Fotorresistencia (LDR) positivo','QRB (Siemens) o Honeywell MZ770: hilo negro (BK). KLC1000/KLC2002: hilo negro (BK)'],
+['X20 contacto LDR- (contacto 1)','Fotorresistencia (LDR) negativo','QRB: hilo azul (BU). KLC1000/KLC2002: hilo azul (BU). Conectar mal KLC o IRD a X20 puede dañar los sensores'],
+['X21 UV-','Entrada UV (cable UV; el manual muestra el F200K conectado a UV-/UV+)','F200K a UV-/UV+'],
+['X21 UV+ (contacto 1)','Entrada UV positivo','Cable máximo 20 m (X20-X21). Para cables de más de 10 m en ION y UV el manual EN exige protección con tubo de descarga de gas; en LDR, cable apantallado con pantalla a tierra']
+]},
+{h:'Conectores de bajo nivel (parte inferior)', rows:[
+['X30','Interfaz de usuario UI300 (pantalla)','Cable UI300-V2 de 1 m. Máximo 1 m'],
+['X31','Opción LSB (LAMTEC SYSTEM BUS): módulos LCM100/LEM100, DFM300, VSM100, bus de campo','Máximo 1 m. Bus en serie, nunca en estrella; resistencia de terminación de 120 ohm activada solo en el primer y el último equipo (DIP del BT300 en posición 1). Cable 2x2x0,22 mm2 hasta 40 m, 2x2x0,34 mm2 de 40 a 300 m, 2x2x0,50 mm2 de 300 a 500 m, trenzado y apantallado, 120 ohm'],
+['X32','Salida continua / canal de actuador 1 (p. ej. servomotor de la válvula de aire)','En la guía Baltur el menú de actuadores muestra canal 1 gasóleo, canal 2 aire, canal 3 gasóleo; el número de canal depende de la configuración. Máximo 3 m (guía Baltur) o 10 m (manual EN, equipos SN1801 y posteriores)'],
+['X33','Salida continua / canal de actuador 2 (p. ej. servomotor de la válvula de gas)','Mismas longitudes que X32'],
+['X34','Salida continua / canal de actuador 3 (opcional)','Solo BT330 y BT340 (el BT320 tiene 2 salidas motorizadas)']
+]},
+{h:'Interfaz UI300-LSB (cable de 4 hilos a LSB)', rows:[
+['Amarillo / rojo','+ = +24 V CC','Colores según manguito gris / negro'],
+['Blanco / negro','- = GND',''],
+['Verde / naranja','H = CAN H',''],
+['Marrón / marrón','L = CAN L','']
+]},
+{h:'Diferencias BT320 / BT330 / BT340', rows:[
+['BT320','2 salidas motorizadas (actuadores) y 1 salida continua 0-10 V, 0/4-20 mA o PWM para regular la velocidad del ventilador con VSM100 (opcional)','1 juego de curvas (gasóleo o gas). Hasta la versión 3.8.0.0 solo funcionamiento intermitente; desde número de serie 22xxxxxx y versión 3.9.0.0 también continuo con sensores aptos'],
+['BT330','3 salidas motorizadas y 1 salida continua para el ventilador (VSM100, opcional)','1 juego de curvas (gasóleo o gas). Continuo solo con sensores de llama aptos para funcionamiento continuo'],
+['BT340','3 salidas motorizadas y 1 salida continua; funcionamiento gasóleo/gas con el módulo DFM300','2 juegos de curvas (gasóleo/gas o gas/gas); se necesita DFM300 o LCM100. Continuo solo con sensores aptos']
+]}
+], notes:[
+'Los dibujos del manual están en inglés; los nombres de los bornes y las funciones se han traducido al español. La asignación de contactos dentro de cada regleta (señal/PE/N o L) está tomada del dibujo.',
+'El BT335 (no es BT320/330/340) tiene una asignación distinta en X01, X02, X03, X10, X21 y X26: solo para esos modelos de dos combustibles, ver manual EN apartado 4.2.2.',
+'P 801 (definición de la asignación de bornes): 0 = gasóleo 2 etapas o modulante; 1 = gasóleo 3 etapas; 2 = gas modulante (X26 señal de estado del proceso desde 3.7.0.0); 3 = dual gasóleo/gas con piloto (solo BT340); 4 = dual gasóleo hasta 3 etapas y gas modulante (solo BT340); 5 a 8 = igual que 0 a 4 pero con X26 como señal de estado del proceso y no bomba; 10 = gas/gas con DFM300 (desde 3.9.0.0).',
+'Cables de hasta 20 m: no más de 3 transferencias de señal en el mismo cable, para evitar fallos peligrosos.',
+'Longitudes máximas: el manual EN indica X01-X06 y X08 10 m; X07, X09, X10, X20-X21, X24 20 m; X22-X23 ilimitada; X25-X26 10 m; X30 y X31 1 m; X32-X34 10 m (SN1801 y posteriores). La guía Baltur (versión anterior) indica X01-X10 10 m, X20-X21 3 m, X24-X26 10 m, X32-X34 3 m. Usar la más restrictiva si hay duda.',
+'Tensión: los conectores X30-X34 no tienen separación de protección respecto a la tensión de red; desconectar la instalación en todos los polos antes de enchufarlos o desenchufarlos.',
+'Relés de salida de 250.000 maniobras a 2 A cos fi 0,2: válvulas 1 A cos fi 0,4, ventilador y bomba/señal 2 A cos fi 0,4, trafo de encendido 2 A cos fi 0,2, alarma 1 A cos fi 0,3.',
+'No verificado: asignación de pines del conector RAST 2,5 de 6 polos del servomotor (el manual indica que son 6 polos, pero no la tabla de contactos en el texto consultado).',
+'No verificado: pines internos de X32-X34 y X31 (el dibujo solo da el nombre del conector).',
+'No verificado: que X10 contacto 1 sea el reset; el texto solo confirma X10.2 = Burner ON y el reset se deduce del orden del dibujo.',
+'No verificado: no se ha contrastado con el esquema del Ecoflam BLU 1500.1 con BT330 ni con los textos BT300 en ruso; las fuentes son solo las indicadas en src.'
+], src:'Guía rápida Baltur BT320/330/340 (0006081511_201311), apartado 11.3 Diagramas de conexión, pp. 34-35 del manual (pág. 35-36 del PDF), y menús de entradas/salidas pp. 19-21. Manual LAMTEC BA-BT300 DLT1201-26-EN-027, caps. 3 (descripción del producto), 4.2.1 a 4.2.6 (Connecting diagrams) y parámetro P 801, pp. 20-50.'};
+
+var ESQ_WFM = {id:'wfm', name:'Weishaupt W-FM 25 (tapa gris)', intro:'Conexionado del gestor de combustión W-FM 25 de los quemadores de gasóleo Weishaupt WL10...-D Z y WL20...-C Z. El equipo tiene dos regletas de red (X6 de 7 polos y X7 de 4 polos) y una serie de conectores enchufables numerados (1, 3C, 3N, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15) más los conectores G, AM, L/A, FU, NA, P y TWI. En los textos y códigos de error del manual el conector n.º n también se escribe X3:n (por ejemplo conector n.º 7 = X3:7, conector n.º 14 = X3:14).', groups:[
+{h:'Regleta X6 (conector de conexión de 7 polos)', rows:[
+['X6 L','Fase de alimentación 230 V / 50 Hz (a través del limitador F2 de temperatura o presión)','Fusible interno F7 T6,3H (IEC 127-2/5). Fusible externo máximo 16 A (16 AB)'],
+['X6 PE','Tierra',''],
+['X6 N','Neutro',''],
+['X6 T1','Regulador de temperatura o presión B15 (cadena de regulación, T1/T2)','Parámetro de reacción a la demanda de calor con módulo de bus: 2 = orden de bus y cadena de regulación (T1/T2) activas'],
+['X6 T2','Regulador de temperatura o presión B15 (cadena de regulación, T1/T2)',''],
+['X6 S3','Contacto de la regleta X6 sin descripción en el texto','No verificado: función'],
+['X6 B4','Salida de indicación / lámpara de funcionamiento (P11, opcional)','La salida B4 es configurable; el código de error A5h indica configuración incorrecta en B4']
+]},
+{h:'Regleta X7 (conector de conexión de 4 polos)', rows:[
+['X7 B5','Salida de indicación: lámpara de etapa 2 (P13, opcional) según el esquema funcional','El texto de averías (d4h) la llama Betriebsmeldung (indicación de funcionamiento) X7:B5: tensión ajena en B5 provoca error'],
+['X7 T6','Regulador de etapa 2 B16 (conjunto T8-T7-T6)',''],
+['X7 T7','Regulador de etapa 2 B16 (conjunto T8-T7-T6)',''],
+['X7 T8','Regulador de etapa 2 B16 (conjunto T8-T7-T6)','']
+]},
+{h:'Conectores enchufables de salidas (230 V)', rows:[
+['n.º 1 (X3:1)','Válvula magnética etapa 1 (K11)','Parámetro 9 configura la salida X3:1: 1 = válvula de seguridad, 2 = válvula de depósito'],
+['n.º 6','Válvula magnética etapa 2 (K13)',''],
+['n.º 3C','Motor del quemador o convertidor de frecuencia con motor en marcha permanente',''],
+['n.º 3N','Motor del quemador o convertidor de frecuencia',''],
+['n.º 4','Equipo de encendido (transformador, T1)',''],
+['n.º 5','Libre','']
+]},
+{h:'Conectores enchufables de entradas y puentes', rows:[
+['n.º 7 (X3:7)','Puente n.º 7 (cadena de seguridad)','Si se abre, el equipo apaga el quemador (código bbh, estado 46 Sicherheitskette geoffnet X3:7). Retirar el puente n.º 7 se usa en puesta en marcha para ciertas pruebas'],
+['n.º 8 (X3:8)','Contador de gasóleo (generador de impulsos)','Parámetro 6: factor 200 impulsos = 1 litro por defecto'],
+['n.º 11 (X3:11)','Presostato de aire','Se activa con el parámetro 8 = 1; con presostato de aire montado poner parámetro 8 = 1'],
+['n.º 12 (X3:12)','Presostato de gasóleo (mínimo)','Se activa con el parámetro 7 = 1; con presostato de gasóleo montado poner parámetros 7 y 8 en 1 y parámetro 9 en 2'],
+['n.º 13','Sensor de llama QRB4','Parámetro d / E2: 0 = electrodo de ionización o sensor FLW (E2: KLC), 1 = entrada de contacto X3:14 con vigilante LFS1/RAR9, 2 = QRB4 (ajuste de fábrica)'],
+['n.º 14 (X3:14)','Desbloqueo remoto / liberación de arranque','Cable máximo 50 m. Más de 5 desbloqueos remotos en 15 min provoca error d2h. Con parámetro d / E2 = 1 es entrada del vigilante de llama LFS1/RAR9. Sin liberación de arranque: CFh'],
+['n.º 15','Presostato de aire del aspirador de aire exterior (LDW2). Puente n.º 15','Si falta el puente n.º 15 aparece el error CEh']
+]},
+{h:'Conectores de módulos y accesorios', rows:[
+['L/A','Servomotor de la compuerta de aire','Error d1h si la conexión al servomotor es incorrecta'],
+['G','Enchufe de codificación (negro) en la ranura del servomotor','Si falta el enchufe aparece error d1h; con E0 = 1 y enchufe puesto, error 4Ah'],
+['FU','Convertidor de frecuencia',''],
+['NA','Generador de revoluciones (Namur)','Regulación de velocidad (opcional)'],
+['P','Sonda de O2 (accesorio)',''],
+['TWI','Interfaz TWI (VisionBox, accesorio)','Conectar y desconectar los equipos del bus TWI solo sin tensión; reducir número de participantes o longitud si hay error 16h'],
+['AM','Panel de mando',''],
+['Ranura 1','Módulo analógico EM3/3 o módulo de bus de campo EM3/2',''],
+['2','Cubierta del W-FM','Montarla de nuevo al reparar el servomotor (error d1h)']
+]}
+], notes:[
+'El esquema eléctrico detallado (Schaltplan) no está en el suplemento consultado; el manual remite al esquema adjunto con el quemador. Lo aquí recogido sale del dibujo de entradas y salidas (2.1.4), del esquema funcional (2.1.3), de la instalación (3.1), de los parámetros y de la tabla de errores.',
+'Mapeo de contactos: la identificación de X3:n con el conector n.º n se deduce de los textos (X3:7 = conector n.º 7, X3:14 = desbloqueo remoto n.º 14, X3:12 = presostato de gasóleo, X3:11 = presostato de aire); el manual no define una regleta X3 con nombre.',
+'Polaridad y cableado: comprobar siempre en el esquema adjunto la polaridad y el cableado de los conectores de 7 polos (X6) y 4 polos (X7) antes de enchufarlos.',
+'Las etiquetas del dibujo y las funciones están traducidas del alemán al español.',
+'Alimentación separada del motor (no con regulación de velocidad): el manual indica enchufar la línea del motor, desde el contactor de potencia, en el conector de 7 polos; fusible externo de esa línea mínimo 10 AT, máximo 16 AT. El manual no dice a que contacto de X6 va.',
+'No verificado: que la tapa gris corresponda al W-FM 25 ni que el fabricante sea Dungs; el documento consultado no lo indica.',
+'No verificado: función del contacto S3 de X6, y el contacto exacto de T6, T7 y T8 dentro de X7 (solo se ve que B16 va entre T8, T7 y T6).',
+'No verificado: que B4 sea la lámpara de funcionamiento y B5 la de etapa 2; el esquema funcional lo sugiere, pero el texto de averías llama B5 indicación de funcionamiento.',
+'No verificado: no se ha usado el manual del WG5 con W-FM05 (w83051201), que no es el W-FM 25 ni de Dungs.'
+], src:'Weishaupt Zusatzblatt WL10...-D Z y WL20...-C Z con W-FM25, n.º 83595201 (2/2025-07): 2.1.3 y 2.1.4 pp. 9-10, 3.1 pp. 12-13, parámetros pp. 20-22, errores pp. 52-55, estados de funcionamiento p. 56.'};
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function norm(s) { return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+  var L = [ESQ_LME2, ESQ_LME7, ESQ_LMV3, ESQ_LMV5, ESQ_BT, ESQ_WFM, ESQ_MPA];
+  var cur = L[0], q = '';
+  var chips = $('ebrands');
+  L.forEach(function (b) {
+    var el = document.createElement('button');
+    el.type = 'button'; el.className = 'chip'; el.textContent = b.name; el.dataset.id = b.id;
+    el.addEventListener('click', function () { cur = b; draw(); });
+    chips.appendChild(el);
+  });
+  function draw() {
+    Array.prototype.forEach.call(chips.children, function (c) { c.setAttribute('aria-pressed', String(c.dataset.id === cur.id)); });
+    var t = norm(q).split(/\s+/).filter(Boolean), shown = 0;
+    var html = '';
+    cur.groups.forEach(function (g) {
+      var rows = g.rows.filter(function (r) { var h = norm(g.h + ' ' + r.join(' ')); return t.every(function (w) { return h.indexOf(w) > -1; }); });
+      if (!rows.length) return;
+      shown += rows.length;
+      html += '<div><div class="label" style="margin-bottom:6px">' + esc(g.h) + '</div><div class="tablewrap"><table class="esqt"><tbody>' +
+        rows.map(function (r) {
+          return '<tr><th scope="row">' + esc(r[0]) + '</th><td>' + esc(r[1]) + (r[2] ? '<div class="esqn">' + esc(r[2]) + '</div>' : '') + '</td></tr>';
+        }).join('') + '</tbody></table></div></div>';
+    });
+    if (!shown) html = '<div class="msg">No hay bornes que coincidan con «' + esc(q) + '».</div>';
+    var notes = (!t.length && cur.notes && cur.notes.length) ? '<div><div class="label" style="margin-bottom:6px">Avisos y datos que no he podido verificar</div><ul class="pnotes plain">' + cur.notes.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('') + '</ul></div>' : '';
+    $('elist').innerHTML = '<p class="foot" style="margin:0">' + esc(cur.intro) + '</p>' + html + notes + '<div class="foot">Fuente: ' + esc(cur.src) + '</div>';
+  }
+  $('eq').addEventListener('input', function (e) { q = e.target.value; draw(); });
+  draw();
+})();
+
 </script>
 
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
