@@ -1,4 +1,4 @@
-var C='burnertj-v4',F=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png'];
+var C='burnertj-v5',F=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','img/dungs_1.png','img/dungs_2.png','img/dungs_3.png','img/lamtec_1.png','img/lamtec_2.png','img/lme2_1.png','img/lme2_2.png','img/lme7_1.png','img/lme7_2.png','img/lme7_3.png','img/lmv3_1.png','img/lmv3_2.png','img/lmv5_1.png','img/lmv5_2.png','img/lmv5_3.png','img/wfm_1.png'];
 self.addEventListener('install',function(e){e.waitUntil(caches.open(C).then(function(c){return c.addAll(F);}));self.skipWaiting();});
 self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(k){return Promise.all(k.filter(function(n){return n!==C;}).map(function(n){return caches.delete(n);}));}));self.clients.claim();});
 self.addEventListener('fetch',function(e){if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(function(r){var cp=r.clone();caches.open(C).then(function(c){c.put(e.request,cp);});return r;}).catch(function(){return caches.match(e.request).then(function(m){return m||caches.match('index.html');});}));});
